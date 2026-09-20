@@ -22,8 +22,7 @@ python -m pip install -r requirements.txt
 python run.py
 ```
 
-Open [localhost:8000](http://127.0.0.1:8000). On the configured development machine,
-`.\.venv\Scripts\python.exe run.py` is enough. `--no-browser` keeps the launcher from
+Open [localhost:8000](http://127.0.0.1:8000). `--no-browser` keeps the launcher from
 opening a tab; `--port 8001` uses a different port.
 
 The first run builds the small CImg bridge if a C++17 compiler and CMake are installed.

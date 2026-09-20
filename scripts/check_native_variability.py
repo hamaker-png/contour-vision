@@ -5,7 +5,7 @@ import cv2,numpy as np
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT))
 from backend.models import Measurements
 from backend.timelines import Frame,Operation,apply_operation
-from scripts.critic_benchmark import cases
+from scripts.benchmark_examples import cases
 OUT=ROOT/'artifacts/replay-native-variability';OUT.mkdir(parents=True,exist_ok=True)
 rng=np.random.default_rng(29191)
 for h,w in [(1,1),(1,9),(9,1),(3,3),(8,13)]:
@@ -14,7 +14,7 @@ images=[('rounding_border',rng.integers(0,256,(17,21),dtype=np.uint8))]
 for h,w in [(1,1),(1,9),(9,1),(13,16),(19,35),(64,65)]:images.append((f'random_{h}_{w}',rng.integers(0,256,(h,w),dtype=np.uint8)))
 images += [('ramp_256',np.tile(np.arange(256,dtype=np.uint8),(17,1))),('zero',np.zeros((19,25),np.uint8)),('white',np.full((19,25),255,np.uint8))]
 ring=np.zeros((35,41),np.uint8);ring[1:-1,1:-1]=255;ring[5:-5,5:-5]=0;ring[0,0]=255;images.append(('ring_holes',ring))
-manifest=json.loads((ROOT/'examples/manifest.json').read_text(encoding='utf-8'))+json.loads((ROOT/'examples/critic-fixtures.json').read_text(encoding='utf-8'))
+manifest=json.loads((ROOT/'examples/manifest.json').read_text(encoding='utf-8'))+json.loads((ROOT/'examples/additional-fixtures.json').read_text(encoding='utf-8'))
 for f in manifest:
     _,_,a,_=next(cases(f));scale=min(1,512/max(a.shape[:2]));a=cv2.resize(a,None,fx=scale,fy=scale,interpolation=cv2.INTER_AREA)
     images.append((f['id'],a))

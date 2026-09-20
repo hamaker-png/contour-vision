@@ -185,7 +185,7 @@ def test_suggestion_endpoint_never_runs_heldout_images():
 
 @pytest.mark.parametrize('example_id',['red-apple','tennis-ball','horse-silhouette'])
 def test_independent_photo_and_silhouette_fixtures(example_id):
-    example=next(e for e in json.loads((ROOT/'examples/critic-fixtures.json').read_text()) if e['id']==example_id)
+    example=next(e for e in json.loads((ROOT/'examples/additional-fixtures.json').read_text()) if e['id']==example_id)
     mime='jpeg' if example['filename'].endswith('.jpg') else 'png'
     sample=Sample(id=example_id,name=example['filename'],labeled=True,boxes=example['boxes'],
                   data=f'data:image/{mime};base64,'+base64.b64encode((ROOT/'examples'/example['filename']).read_bytes()).decode())

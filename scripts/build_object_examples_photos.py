@@ -16,7 +16,7 @@ def build():
     destination = ROOT / 'examples/object-tests'
     destination.mkdir(parents=True, exist_ok=True)
     originals = []
-    for filename in ('manifest.json', 'critic-fixtures.json'):
+    for filename in ('manifest.json', 'additional-fixtures.json'):
         originals.extend(json.loads((ROOT / 'examples' / filename).read_text(encoding='utf-8')))
     choices = ['red-candies', 'coins', 'red-apple', 'tennis-ball']
     entries = []

@@ -8,9 +8,9 @@ from backend.models import Strategy,Measurements,Box
 from backend.timelines import timelines_from_strategies
 from backend.search_execution import execute
 from backend.optimizer import score,aggregate
-from scripts.critic_benchmark import cases
+from scripts.benchmark_examples import cases
 OUT=ROOT/'artifacts/replay-fixed-family-matrix';OUT.mkdir(parents=True,exist_ok=True)
-manifest=json.loads((ROOT/'examples/manifest.json').read_text(encoding='utf-8'))+json.loads((ROOT/'examples/critic-fixtures.json').read_text(encoding='utf-8'))
+manifest=json.loads((ROOT/'examples/manifest.json').read_text(encoding='utf-8'))+json.loads((ROOT/'examples/additional-fixtures.json').read_text(encoding='utf-8'))
 originals={f['id']:next(cases(f))[2] for f in manifest}
 confusers={'red-candies':'red-apple','green-shapes':'tennis-ball','coins':'red-candies','red-apple':'red-candies','tennis-ball':'green-shapes','horse-silhouette':'coins'}
 graphs={f['id']:timelines_from_strategies([Strategy.model_validate(s) for s in f['strategies']]) for f in manifest}

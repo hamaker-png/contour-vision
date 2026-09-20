@@ -10,7 +10,7 @@ from backend.timelines import Frame,Operation,Timeline,apply_operation,resolve_p
 from backend.timeline_exporter import TimelineExportRequest,export_timeline
 DEST=ROOT/'artifacts/timeline-native';DEST.mkdir(parents=True,exist_ok=True)
 measures=Measurements(fields=['length','width','area','angle','color','center'],pixels_per_unit=2,unit='mm')
-manifest=json.loads((ROOT/'examples/manifest.json').read_text())+json.loads((ROOT/'examples/critic-fixtures.json').read_text())
+manifest=json.loads((ROOT/'examples/manifest.json').read_text())+json.loads((ROOT/'examples/additional-fixtures.json').read_text())
 cases=[]
 for example in manifest:
     graphs=timelines_from_strategies([Strategy.model_validate(s) for s in example['strategies']]);selected=graphs[2 if example['id']=='coins' else 0].id
@@ -61,4 +61,6 @@ for name,graphs,selected,path in cases:
                     exceptions.append({'step':id,'detection':detection_index,'field':key,'native':a['measurements'][key],'python':value,'unit':'mm2','cause':'OpenCV build resize rounding; one intermediate mask pixel differs. Final empty mask hides this difference.'})
     entry={'case':name,'pixel_differences':differences,'measurement_steps':len(expected),'cpp_latency_ms':actual['latency_ms'],'binary_bytes':binary.stat().st_size,'operation_kinds':[op.kind for op in resolve_paths(graphs)[selected]],'parity':'documented cross-build difference' if exceptions else 'passed','exceptions':exceptions};records.append(entry);print(json.dumps(entry),flush=True)
 missing=subprocess.run([str(build/'red_candies.exe'),'missing.png'],capture_output=True,text=True);assert missing.returncode==1 and not missing.stdout
-(ROOT/'artifacts/critic/native-timeline-parity.json').write_text(json.dumps(records,indent=2));print(f'Checked {len(records)} compiled exports; {sum(bool(r["exceptions"]) for r in records)} has a documented intermediate measurement difference.',flush=True)
+destination=ROOT/'artifacts/validation/native-timeline-parity.json'
+destination.parent.mkdir(parents=True,exist_ok=True)
+destination.write_text(json.dumps(records,indent=2));print(f'Checked {len(records)} compiled exports; {sum(bool(r["exceptions"]) for r in records)} has a documented intermediate measurement difference.',flush=True)

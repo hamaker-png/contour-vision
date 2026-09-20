@@ -43,7 +43,7 @@ def cases(example):
 
 def benchmark(extra=False, hard=False):
     manifest = json.loads((ROOT / "examples/manifest.json").read_text())
-    if extra:manifest += json.loads((ROOT / "examples/critic-fixtures.json").read_text())
+    if extra:manifest += json.loads((ROOT / "examples/additional-fixtures.json").read_text())
     records=[]
     for example in manifest:
         timelines=timelines_from_strategies([Strategy.model_validate(s) for s in example["strategies"]])
@@ -84,7 +84,7 @@ def benchmark(extra=False, hard=False):
 
 
 if __name__=="__main__":
-    parser=argparse.ArgumentParser();parser.add_argument("--output",default="artifacts/critic/baseline-benchmark.json");parser.add_argument('--extra',action='store_true');parser.add_argument('--hard',action='store_true');args=parser.parse_args()
+    parser=argparse.ArgumentParser();parser.add_argument("--output",default="artifacts/validation/baseline-benchmark.json");parser.add_argument('--extra',action='store_true');parser.add_argument('--hard',action='store_true');args=parser.parse_args()
     report=benchmark(args.extra,args.hard);destination=ROOT/args.output;destination.parent.mkdir(exist_ok=True,parents=True)
     destination.write_text(json.dumps(report,indent=2),encoding="utf-8")
     print(json.dumps({"groups":report["groups"],"median_all_paths_wall_ms":report["median_all_paths_wall_ms"]},indent=2))

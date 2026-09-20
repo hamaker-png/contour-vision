@@ -10,7 +10,7 @@ from backend.timelines import Frame,Operation,apply_operation,resolve_paths,time
 
 fields=Measurements(fields=['length','width','area','angle','color','center'])
 horse=cv2.imread(str(ROOT/'examples/horse.png'));truth=cv2.cvtColor(horse,cv2.COLOR_BGR2GRAY)<127
-fixture=next(e for e in json.loads((ROOT/'examples/critic-fixtures.json').read_text()) if e['id']=='horse-silhouette')
+fixture=next(e for e in json.loads((ROOT/'examples/additional-fixtures.json').read_text()) if e['id']=='horse-silhouette')
 timelines=timelines_from_strategies([Strategy.model_validate(s) for s in fixture['strategies']]);paths=resolve_paths(timelines)
 masks=[]
 for t in timelines:
@@ -36,5 +36,7 @@ for scale in [.5,1,2]:
                             'max_rgb_channel_error':max(abs(a-b) for a,b in zip(m['mean_rgb'],[255,0,0]))})
 report={'scope':'Analytic raster rectangles, not calibrated real-camera measurement certification. Low resolution intentionally tests the speed/precision tradeoff.',
         'horse_mask_fidelity':masks,'rectangles':records}
-destination=ROOT/'artifacts/critic/measurement-evidence.json';destination.write_text(json.dumps(report,indent=2))
+destination=ROOT/'artifacts/validation/measurement-evidence.json'
+destination.parent.mkdir(parents=True,exist_ok=True)
+destination.write_text(json.dumps(report,indent=2))
 print(json.dumps({'horse_masks':masks,'errors_by_max_side':{side:{key:max(r[key] for r in records if r['max_side']==side) for key in ['length_error_pct','width_error_pct','angle_error_deg','max_rgb_channel_error']} for side in [128,1280]}},indent=2))

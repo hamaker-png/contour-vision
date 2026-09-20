@@ -175,7 +175,7 @@ def export(request: ExportRequest):
 @app.get("/api/examples")
 def examples():
     entries = []
-    for filename in ("manifest.json", "critic-fixtures.json", "vision-fixtures.json",
+    for filename in ("manifest.json", "additional-fixtures.json", "vision-fixtures.json",
                      "object-tests-photos.json", "object-tests-a.json", "object-tests-b.json"):
         path = ROOT / "examples" / filename
         if path.exists():

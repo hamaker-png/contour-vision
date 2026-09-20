@@ -18,7 +18,7 @@ for functional testing, not a representative reliability benchmark.
   to scikit-image. Downloaded from scikit-image v0.25.2. Twenty-four coins are manually labeled.
   This is an intentionally harder comparison with uneven lighting.
 
-Additional independent critic-review fixtures (original files unchanged):
+Additional image fixtures (original files unchanged):
 
 - `red-apple.jpg`: [Red Apple on Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Red_Apple.jpg),
   Abhijit Tembhekar, [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/).
@@ -33,7 +33,7 @@ Additional independent critic-review fixtures (original files unchanged):
   v0.25.2 repository. One manual box covers the irregular 2D silhouette; narrow legs and tail
   make shape loss visible even when box detection succeeds.
 
-The critic benchmark preserves the originals on disk. Its optional derived stress cases
+The example benchmark preserves the originals on disk. Its optional derived stress cases
 are labeled as derived, including an artificial same-color distractor and partial occlusion.
 Very large in-memory variants use JPEG quality 95 to fit the app's upload limit; the report
 records this encoding. They are not additional independent scenes.
@@ -56,14 +56,6 @@ development fixtures, not internet photographs or held-out accuracy evidence. Th
 first pair places three radius-6 spots on a known brightness gradient. The circle scene
 contains two filled disks and two rectangular outlines; its confirmation design used
 a previously observed rectangle false positive. No source photographs were altered.
-
-The later independent apple and tennis photographs are retained as consumed validation
-evidence under `artifacts/night-review/vision/`, rather than added to the fitted example
-menu. Their source URLs, photographer attribution, licenses, original hashes and boxes
-are in [the apple manifest](../artifacts/night-review/vision/heldout-apples.json) and
-[the sealed tennis plan](../artifacts/night-review/vision/tennis-heldout/sealed-tennis-plan.json).
-Derived previews and stress images retain the corresponding originals' attribution and
-license. These four images were not used to tune their frozen presets.
 
 ## Offline object-tree pack
 

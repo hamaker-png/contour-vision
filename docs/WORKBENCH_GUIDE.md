@@ -32,13 +32,7 @@ keys pass through the hosting server. [Data handling](../PRIVACY.md).
 Python 3.11+ is needed for the **builder only**. The exported program needs a C++ compiler
 and OpenCV development libraries; it does not need Python, an API key, model weights, or a GPU.
 
-Windows (a project-local environment is already set up on this machine):
-
-```powershell
-.\.venv\Scripts\python.exe run.py
-```
-
-Fresh install, Windows:
+Windows:
 
 ```powershell
 python -m venv .venv
@@ -78,8 +72,8 @@ The [pack guide](../examples/packs/README.md) lists all starting pipelines.
 [Download 20 saved projects](../examples/packs/20-object-trees.zip) to extract
 and open individually. They include their images and contain no API keys.
 
-CImg operations need the small native bridge. It is already built on this machine.
-On a fresh installation, install CMake and a C++17 compiler; `run.py` builds the bridge
+CImg operations need the small native bridge.
+Install CMake and a C++17 compiler; `run.py` builds the bridge
 once, or run `python scripts/build_vision.py` explicitly. If the compiler is unavailable,
 the app starts and explains the missing setup when a CImg operation is selected. The
 ZXing-C++ Python binding is installed by `requirements.txt`.
@@ -141,8 +135,7 @@ In **AI settings**, paste a key once and leave **Remember on this computer** che
 to reuse it automatically after reopening the app. The key is stored in the ignored
 `.local/settings.json` file, separately from projects and exports. Unchecking the option
 removes that saved key; an entered key can still be used for the current page. An
-`OPENAI_API_KEY` server environment variable is another local fallback. No personal key
-was available during development, so none has been prefilled.
+`OPENAI_API_KEY` server environment variable is another local fallback.
 Cancelled or superseded AI responses cannot replace newer work. Image validation and CPU
 runs are cancelled when obsolete; a running native operation finishes before its worker
 is released. Browser cancellation cannot guarantee that a provider has not already received
@@ -400,13 +393,12 @@ verification and limitations are recorded in [TESTING.md](../TESTING.md).
 `python scripts/check_extended_native.py` compiles 13 added-operation/confirmation exports and
 compares pixels, measurements and dependency order with the builder. While the app is
 running, `python scripts/check_vision_examples.py` exercises the new examples through
-HTTP and saves their intermediate images. See [PIPELINE_EXPANSION.md](../PIPELINE_EXPANSION.md)
-for the UI review and expansion evidence. Internal JSON/API names such as `timelines`
+HTTP and saves their intermediate images. Internal JSON/API names such as `timelines`
 are retained for saved-project compatibility; the interface calls them pipelines.
 
-For the latest critique cycles, dataset protocols, native parity, resource benchmarks and
-known failures, see [NIGHT_IMPROVEMENTS.md](../NIGHT_IMPROVEMENTS.md). Reproduce the three
-analytic teaching examples with `python scripts/build_classical_examples.py`.
+Reproduce the three analytic teaching examples with
+`python scripts/build_classical_examples.py`. See [TESTING.md](../TESTING.md) for
+validation commands, test coverage and known limitations.
 
 `python scripts/check_image_families.py` replays 110 fixed-preset primary cases across
 six photo/2D families, preserving failures. After building the added-operation exports,
