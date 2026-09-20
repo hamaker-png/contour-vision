@@ -11,7 +11,8 @@ and can optionally remember an API key in `.local/settings.json`.
 
 ## Container
 
-The Dockerfile uses Python 3.12 and pinned headless OpenCV/ZXing dependencies.
+The Dockerfile targets Linux x86-64 with Python 3.12 and pinned headless OpenCV/ZXing dependencies.
+Other CPU architectures require their own dependency and container verification.
 A separate C++17 build stage compiles the included CImg bridge. The runtime runs as
 UID 10001, contains no compiler and requires no GPU. Its build-context allowlist
 excludes local credentials, environments and test artifacts.

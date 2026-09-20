@@ -16,7 +16,7 @@
 
 <body class="stage-images">
 
-<header class="topbar"><button class="brand brand-button" id="new-project" title="Start a new image family"><img src="/static/favicon.svg" width="30" height="30" alt=""><strong>contour</strong></button><nav class="journey-nav" aria-label="Project steps"><button id="toggle-images" data-screen="images" aria-current="step"><span>1</span> Images</button><button id="open-ai" data-screen="define"><span>2</span> Define target</button><button id="open-explore" data-screen="explore"><span>3</span> Compare &amp; edit</button><button id="open-finish" data-screen="finish"><span>4</span> Validate &amp; export</button></nav><details class="project-menu" open><summary>Project</summary><div class="actions"><button id="undo" aria-label="Undo project edit" title="Undo project edit" disabled>↶</button><button id="redo" aria-label="Redo project edit" title="Redo project edit" disabled>↷</button><button id="open-settings">AI settings</button><button id="save" disabled>Save project</button><button id="load">Open project</button><input id="workspace-file" type="file" accept=".json,application/json" hidden></div></details></header>
+<header class="topbar"><button class="brand brand-button" id="new-project" title="Start a new image family"><img src="/static/favicon.svg" width="30" height="30" alt=""><strong>contour</strong></button><nav class="journey-nav" aria-label="Project steps"><button id="toggle-images" aria-label="1. Images" data-screen="images" aria-current="step"><span>1</span><span class="nav-label" data-short="Images">Images</span></button><button id="open-ai" aria-label="2. Define target" data-screen="define"><span>2</span><span class="nav-label" data-short="Target">Define target</span></button><button id="open-explore" aria-label="3. Compare and edit" data-screen="explore"><span>3</span><span class="nav-label" data-short="Edit">Compare &amp; edit</span></button><button id="open-finish" aria-label="4. Validate and export" data-screen="finish"><span>4</span><span class="nav-label" data-short="Export">Validate &amp; export</span></button></nav><details class="project-menu" open><summary>Project</summary><div class="actions"><button id="undo" aria-label="Undo project edit" title="Undo project edit" disabled>↶</button><button id="redo" aria-label="Redo project edit" title="Redo project edit" disabled>↷</button><button id="open-settings">AI settings</button><button id="save" disabled>Save project</button><button id="load">Open project</button><input id="workspace-file" type="file" accept=".json,application/json" hidden></div></details></header>
 
 
 
@@ -35,6 +35,8 @@
 <div id="samples" class="samples family-grid"></div><p id="source-credit" class="help"></p>
 
 <div class="intake-actions"><button id="continue-analysis" class="primary">Continue to target definition →</button></div>
+
+<footer class="app-footer"><span>CPU vision, from image to C++.</span><a href="https://github.com/hamaker-png/contour-vision" target="_blank" rel="noopener noreferrer">Source &amp; setup</a><a href="https://github.com/hamaker-png/contour-vision/blob/main/PRIVACY.md" target="_blank" rel="noopener noreferrer">Images &amp; API keys</a></footer>
 
 </section>
 

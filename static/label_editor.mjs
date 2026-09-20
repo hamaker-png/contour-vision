@@ -15,10 +15,19 @@ export function createLabelEditor(onSave) {
     canvas.style.width=`${canvas.width}px`;canvas.style.height=`${canvas.height}px`;
     $('label-zoom').textContent=zoom===1?'Fit':`${zoom}× fit`;$('zoom-label-out').disabled=zoom===1;$('zoom-label-in').disabled=zoom===4;draw();
   }
-  function zoomTo(next){
+  function currentFitScale(){
+    return Math.min(1,Math.max(1,stage.clientWidth-18)/image.naturalWidth,Math.max(1,innerHeight*.46-18)/image.naturalHeight);
+  }
+  function zoomTo(next,refit=false){
     if(!image)return;clearGesture();const r=canvas.getBoundingClientRect(),s=stage.getBoundingClientRect(),x=(s.left+stage.clientWidth/2-r.left)/r.width,y=(s.top+stage.clientHeight/2-r.top)/r.height;
+    if(next===1||refit)fitScale=currentFitScale();
     zoom=next;resizeCanvas();stage.scrollLeft=canvas.offsetLeft+x*canvas.width-stage.clientWidth/2;stage.scrollTop=canvas.offsetTop+y*canvas.height-stage.clientHeight/2;
   }
+  let resizeFrame;
+  window.addEventListener('resize',()=>{
+    cancelAnimationFrame(resizeFrame);
+    resizeFrame=requestAnimationFrame(()=>{if(image&&$('label-dialog').open)zoomTo(zoom,true);});
+  });
   $('zoom-label-in').addEventListener('click',()=>zoomTo(zoomLevels[Math.min(zoomLevels.length-1,zoomLevels.indexOf(zoom)+1)]));
   $('zoom-label-out').addEventListener('click',()=>zoomTo(zoomLevels[Math.max(0,zoomLevels.indexOf(zoom)-1)]));
   $('zoom-label-fit').addEventListener('click',()=>zoomTo(1));
@@ -100,7 +109,7 @@ export function createLabelEditor(onSave) {
     $('labels-complete').checked=sample.labeled;$('label-error').textContent='Loading image…';$('label-image-name').textContent=sample.name;
     image=null;setMode('draw');ctx.clearRect(0,0,canvas.width,canvas.height);$('save-labels').disabled=true;$('label-boxes').textContent='';$('box-controls').open=false;fields();
     const token=++epoch,loaded=new Image();
-    loaded.onload=()=>{if(token!==epoch||!$('label-dialog').open)return;image=loaded;zoom=1;fitScale=Math.min(1,Math.max(180,stage.clientWidth-18)/image.naturalWidth,Math.max(180,innerHeight*.43)/image.naturalHeight);$('save-labels').disabled=false;$('label-error').textContent='';resizeCanvas();stage.scrollLeft=stage.scrollTop=0;};
+    loaded.onload=()=>{if(token!==epoch||!$('label-dialog').open)return;image=loaded;zoom=1;fitScale=currentFitScale();$('save-labels').disabled=false;$('label-error').textContent='';resizeCanvas();stage.scrollLeft=stage.scrollTop=0;};
     loaded.onerror=()=>{if(token===epoch&&$('label-dialog').open)$('label-error').textContent='This image could not be displayed.';};loaded.src=sample.data;$('label-dialog').showModal();
   }};
 }

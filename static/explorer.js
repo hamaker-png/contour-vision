@@ -127,7 +127,7 @@ function revealSelectedStep(animate=false){
     if(!row)return;
     const bounds=node.getBoundingClientRect(),viewport=row.getBoundingClientRect();
     if(bounds.left>=viewport.left+4&&bounds.right<=viewport.right-4)return;
-    row.scrollTo({left:row.scrollLeft+bounds.left-viewport.left-(row.clientWidth-bounds.width)/2,behavior:animate&&!matchMedia('(prefers-reduced-motion:reduce)').matches?'smooth':'instant'});
+    row.scrollTo({left:row.scrollLeft+bounds.left-viewport.left-(row.clientWidth-bounds.width)/2,behavior:animate&&!matchMedia('(prefers-reduced-motion:reduce)').matches?'smooth':'auto'});
     pipelineScrolls.set(selection.timeline,row.scrollLeft);
   });
 }
@@ -150,7 +150,7 @@ function showScreen(name){
   closeMobileMenus();
   if(name!=='images'&&!state.samples.length)return notify('Upload an image family first.');
   if(['explore','finish'].includes(name)&&!state.timelines.length)return notify('Generate approaches or start a manual pipeline first.');
-  if(name==='finish'&&state.screen==='explore'&&state.selected?.timeline)$('export-choice').value=state.selected.timeline;
+  if(name==='finish'&&state.selected?.timeline)$('export-choice').value=state.selected.timeline;
   state.screen=name;document.body.classList.remove('stage-images','stage-define','stage-explore','stage-finish');document.body.classList.add(`stage-${name}`);
   for(const screen of ['images','define','explore','finish'])$(`screen-${screen}`).hidden=screen!==name;
   document.querySelectorAll('[data-screen]').forEach(b=>{if(b.dataset.screen===name)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current');});
@@ -365,7 +365,7 @@ function renderTimelines() {
     const parent=state.timelines.find(p=>p.id===t.parent_id),fork=t.parent_id?graph.get(t.parent_id).find(o=>o.id===t.fork_after):null;
     const provenance=parent?`<p class="branch-provenance">Input from <button data-focus-pipeline="${esc(parent.id)}" data-focus-step="${esc(t.fork_after)}">${esc(parent.name)}</button> after ${esc(fork?state.catalog.find(c=>c.kind===fork.kind).name:'Starting image')} · ${inherited} shared steps${expanded?` <button data-prefix="${esc(t.id)}" aria-expanded="true">Hide shared steps</button>`:''}</p>`:'';
     const supporters=[...new Set(path.flatMap(supportingIds))],supportLinks=supporters.length?`<p class="support-provenance">Confirmed by ${supporters.map(id=>`<button data-focus-pipeline="${esc(id)}">${esc(state.timelines.find(p=>p.id===id)?.name||id)}</button>`).join(' + ')}</p>`:'';
-    return `<section class="timeline ${parent?'branch-timeline':''}" aria-label="${esc(t.name)}"><div class="timeline-heading"><button class="timeline-title" data-select-timeline="${esc(t.id)}">${esc(t.name)}</button>${parent?'<span class="branch-label">branch</span>':''}<span class="timeline-total ${summary?.over_budget?'over-budget':''}" title="${summary?.over_budget?'Exceeds your target budget':'All required operations, counted once'}">${total}</span><div class="row-actions"><button data-arrange="${esc(t.id)}">Arrange steps</button><button data-add="${esc(t.id)}" aria-label="Add operation to ${esc(t.name)}">＋ Step</button></div></div>${provenance}${supportLinks}<div class="nodes" data-node-row="${esc(t.id)}" role="group" aria-label="Steps in ${esc(t.name)}">${start}${steps}${dropGap(t.id,t.operations.length)}<button class="node-add" data-add="${esc(t.id)}" aria-label="Append operation to ${esc(t.name)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>${t.rationale?`<p class="timeline-rationale">${esc(t.rationale)}</p>`:''}</section>`;
+    return `<section class="timeline ${parent?'branch-timeline':''}" aria-label="${esc(t.name)}"><div class="timeline-heading"><button class="timeline-title" data-select-timeline="${esc(t.id)}">${esc(t.name)}</button>${parent?'<span class="branch-label">branch</span>':''}<span class="timeline-total ${summary?.over_budget?'over-budget':''}" title="${summary?.over_budget?'Exceeds your target budget':'All required operations, counted once'}">${total}</span><div class="row-actions"><button data-arrange="${esc(t.id)}">Arrange steps</button><button data-add="${esc(t.id)}" aria-label="Add operation to ${esc(t.name)}">＋ Step</button></div></div>${provenance}${supportLinks}<div class="nodes" data-node-row="${esc(t.id)}" role="group" aria-label="Steps in ${esc(t.name)}">${start}${steps}${dropGap(t.id,t.operations.length)}<button class="node-add" data-add="${esc(t.id)}" aria-label="Append operation to ${esc(t.name)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>${t.rationale?(pipelineView==='compare'?`<details class="timeline-explanation"><summary>Why this approach</summary><p>${esc(t.rationale)}</p></details>`:`<p class="timeline-rationale">${esc(t.rationale)}</p>`):''}</section>`;
   }).join('')||(pipelineView==='compare'?'<div class="empty"><h2>Choose pipelines to compare.</h2><p>Select up to 3 pipelines from the list.</p></div>':'<div class="empty"><h2>Start with an image and a transform.</h2><p>Generate approaches from your image family, or add a manual approach.</p></div>');
   document.querySelectorAll('[data-node-row]').forEach(row=>row.scrollLeft=pipelineScrolls.get(row.dataset.nodeRow)||0);
   $('undo').disabled=!state.undo.length;$('redo').disabled=!state.redo.length;
@@ -775,7 +775,11 @@ $('close-hardware').addEventListener('click',()=>$('hardware-dialog').close());$
 $('manual-start').addEventListener('click',()=>{const t={id:uid('timeline'),name:'My approach',parent_id:null,fork_after:null,rationale:'Manual pipeline. Add a transform to reveal your target.',operations:[operation('resize')]};if(edit(next=>next.push(t))){select(t.id,t.operations[0].id);run();}});
 for(const id of ['preview-image','validation-image'])$(id).addEventListener('change',e=>{state.active=e.target.value;render();if(!activeRun&&state.timelines.length&&!currentResult())run();});
 $('family-preview').addEventListener('click',e=>{const b=e.target.closest('[data-family-image]');if(b){state.active=b.dataset.familyImage;render();}});
-$('export-choice').addEventListener('change',renderFinish);$('validate-family').addEventListener('click',()=>run(true));$('export-chosen').addEventListener('click',()=>exportSelected($('export-choice').value));
+$('export-choice').addEventListener('change',()=>{
+  const timeline=$('export-choice').value,path=paths(state.timelines).get(timeline);
+  if(path){state.selected={timeline,node:path.at(-1)?.id||'source'};pipelineSelections.set(timeline,state.selected.node);renderTimelines();renderInspector();}
+  renderFinish();
+});$('validate-family').addEventListener('click',()=>run(true));$('export-chosen').addEventListener('click',()=>exportSelected($('export-choice').value));
 $('validation-review').addEventListener('change',e=>{if(e.target.id==='review-stage')renderValidationReview($('export-choice').value);});
 $('validation-review').addEventListener('click',e=>{
   const image=e.target.closest('[data-review-image]'),label=e.target.closest('[data-review-label]'),rerun=e.target.closest('[data-review-run]'),step=e.target.closest('[data-review-step]');

@@ -72,6 +72,10 @@ button.primary:disabled:hover{background:var(--green)}
 .journey-heading p{line-height:1.65}
 .upload-options p{line-height:1.6;max-width:640px}
 .family-count{font-variant-numeric:tabular-nums}
+.app-footer{display:flex;align-items:center;flex-wrap:wrap;gap:12px 22px;margin-top:32px;padding-top:20px;border-top:1px solid var(--line);font-size:13px;line-height:1.6;color:var(--muted)}
+.app-footer>span{margin-right:auto}
+.app-footer a{text-decoration:none}
+.app-footer a:hover{text-decoration:underline}
 .inspector-heading{gap:16px}
 .inspector-heading>strong{font-size:15px}
 .section-heading>button{flex-shrink:0;min-width:34px;min-height:34px}
@@ -93,6 +97,8 @@ dialog::backdrop{background:#172a2059;backdrop-filter:blur(2px)}
   .editor-view .row-actions{margin-top:2px}
   .editor-view .node-top{height:58px;flex-basis:58px}
   .example-library{padding:15px;margin-bottom:18px}
+  .definition-layout>.assistant-panel{order:initial}
+  .app-footer>span{flex-basis:100%}
 }
 @media(max-height:650px){
   .stage-explore .topbar,.stage-explore .project-status{position:static}
@@ -105,3 +111,32 @@ dialog::backdrop{background:#172a2059;backdrop-filter:blur(2px)}
   .stage-explore .timing-foot{margin-top:8px}
 }
 @media(prefers-reduced-motion:reduce){button{transition:none}}
+
+/* Comparison favors side-by-side evidence; Focus retains full editing controls. */
+.editor-view .node-wrap>.node{flex:1 0 auto}
+.journey-nav button .nav-label,.journey-nav button[aria-current=step] .nav-label{display:inline;width:auto;height:auto;flex:initial;border:0;border-radius:0;background:transparent;color:inherit;font-size:inherit}
+.comparison-mode{--card:150px}
+.editor-view .comparison-mode .node{min-height:0}
+.editor-view .comparison-mode .node-top{height:52px;flex-basis:52px;padding:8px;gap:5px}
+.editor-view .comparison-mode .node-top>span:last-child{font-size:12px;line-height:1.35}
+.editor-view .comparison-mode .node-num{font-size:11px}
+.editor-view .comparison-mode .node-preview{height:104px;flex-basis:104px}
+.editor-view .comparison-mode .node-meta{min-height:56px;padding:8px;font-size:11px;line-height:1.5}
+.editor-view .comparison-mode .node-inline{display:none}
+.editor-view .comparison-mode .shared-input .node-meta strong{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.editor-view .comparison-mode .shared-input .node-meta>span:first-of-type{display:none}
+.editor-view .comparison-mode .drop-gap,.editor-view .comparison-mode .node-connector{width:22px;flex-basis:22px;min-height:0}
+.editor-view .comparison-mode .node::after,.editor-view .comparison-mode .node:last-child::after{right:-20px;top:94px}
+.editor-view .comparison-mode .node-add{margin-top:82px}
+.editor-view .comparison-mode .timeline{padding-bottom:18px;margin-bottom:18px;border-bottom:1px solid var(--line)}
+.editor-view .comparison-mode .timeline:last-child{border-bottom:0}
+.timeline-explanation{border:0;padding:0;margin:6px 0 0;color:var(--muted)}
+.timeline-explanation summary{font-size:12px;width:fit-content}
+.timeline-explanation p{font-size:13px;line-height:1.6;margin:8px 0 0}
+@media(max-width:720px){
+  .topbar .journey-nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));width:100%;overflow:visible;gap:2px}
+  .journey-nav button{justify-content:center;min-width:0;padding:7px 3px;gap:4px}
+  .journey-nav button>span:first-child{width:20px;height:20px;flex-basis:20px;font-size:11px}
+  .journey-nav button .nav-label,.journey-nav button[aria-current=step] .nav-label{font-size:0}
+  .journey-nav .nav-label::after{content:attr(data-short);font-size:12px}
+}

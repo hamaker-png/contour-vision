@@ -127,7 +127,7 @@ CATALOG.update(EXTRA_CATALOG)
 
 class Operation(StrictModel):
     id: str = Field(min_length=1, max_length=100, pattern=r"^[A-Za-z0-9_-]+$")
-    kind: str
+    kind: str = Field(min_length=1, max_length=100)
     params: dict[str, int | float | bool | str] = Field(default_factory=dict)
 
     @model_validator(mode="after")

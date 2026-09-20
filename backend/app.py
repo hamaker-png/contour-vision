@@ -82,7 +82,17 @@ async def local_requests(request: Request, call_next):
 @app.exception_handler(RequestValidationError)
 async def invalid_request(request, exc):
     # FastAPI's default errors include the rejected input, potentially an image/key.
-    errors = [{"loc": item["loc"], "msg": item["msg"], "type": item["type"]} for item in exc.errors()]
+    errors = []
+    for item in exc.errors():
+        location = item["loc"]
+        message = item["msg"]
+        if public_mode():
+            # Custom validators can interpolate the bad value into their message.
+            if item["type"] == "value_error":
+                message = "Invalid value or incompatible pipeline configuration"
+            if item["type"] == "extra_forbidden":
+                location = (*location[:-1], "<unexpected field>")
+        errors.append({"loc": location, "msg": message, "type": item["type"]})
     return JSONResponse({"detail": errors}, status_code=422)
 
 

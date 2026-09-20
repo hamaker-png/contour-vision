@@ -89,6 +89,10 @@ def test_validation_and_unexpected_errors_do_not_echo_payloads(public, monkeypat
     response = public.post("/api/analyze", json={"samples": [{"data": secret}], "description": secret * 300})
     assert response.status_code == 422 and secret not in response.text
     assert all("input" not in error and "ctx" not in error for error in response.json()["detail"])
+    response = public.post("/api/timelines/export", json={
+        "timelines": [{"id": "main", "name": "Main", "operations": [{"id": "bad", "kind": secret}]}],
+        "selected_timeline_id": "main", secret: True})
+    assert response.status_code == 422 and secret not in response.text
     monkeypatch.setattr(module, "run_cpu", AsyncMock(side_effect=RuntimeError(secret)))
     response = public.post("/api/analyze", json={"samples": [sample().model_dump()]}, headers={"x-openai-key": "visitor-key"})
     assert response.status_code == 500 and secret not in response.text
@@ -143,3 +147,58 @@ def test_classic_cpu_work_has_cooperative_cancellation():
     stop.set()
     with pytest.raises(WorkCancelled):
         run_experiment([sample()], [Strategy(name="test", method="otsu")], Measurements(), cancel_event=stop)
+
+
+def test_public_disconnect_retains_admission_until_native_worker_exits(public, monkeypatch):
+    import threading
+    from backend.cpu_work import check_cancelled
+    from test_cpu_cancellation import request as graph_request
+    async def scenario():
+        queued = asyncio.Queue()
+        await queued.put({"type": "http.request", "body": json.dumps(graph_request().model_dump()).encode(), "more_body": False})
+        started, cancelled, release = threading.Event(), threading.Event(), threading.Event()
+        def work(request, cancel_event=None):
+            started.set()
+            assert cancel_event.wait(3)
+            cancelled.set()
+            assert release.wait(3)
+            check_cancelled(cancel_event)
+        scope = {"type": "http", "asgi": {"version": "3.0", "spec_version": "2.4"},
+                 "http_version": "1.1", "method": "POST", "scheme": "https",
+                 "path": "/api/timelines/run", "raw_path": b"/api/timelines/run",
+                 "query_string": b"", "root_path": "",
+                 "headers": [(b"host", b"contour.example"), (b"content-type", b"application/json")],
+                 "client": ("127.0.0.1", 1234), "server": ("contour.example", 443)}
+        async def send(message): pass
+        monkeypatch.setattr(module, "work_lock", asyncio.Semaphore(1))
+        monkeypatch.setattr(module, "run_timelines", work)
+        running = asyncio.create_task(module.app(scope, queued.get, send))
+        try:
+            assert await asyncio.to_thread(started.wait, 2)
+            assert module.admission.active == 1
+            queued.put_nowait({"type": "http.disconnect"})
+            assert await asyncio.to_thread(cancelled.wait, 2)
+            assert module.admission.active == 1 and module.work_lock._value == 0
+        finally:
+            release.set()
+            await asyncio.wait_for(running, 3)
+        assert module.admission.active == 0 and module.work_lock._value == 1
+    asyncio.run(scenario())
+
+
+def test_public_launcher_is_single_worker_and_ignores_proxy_identity(monkeypatch):
+    from backend import serve
+    monkeypatch.setenv("CONTOUR_PUBLIC", "1")
+    monkeypatch.setenv("CONTOUR_ALLOWED_HOSTS", "contour.example")
+    monkeypatch.setenv("PORT", "8123")
+    monkeypatch.setenv("WEB_CONCURRENCY", "32")
+    monkeypatch.setattr(serve, "library", lambda: object())
+    observed = {}
+    monkeypatch.setattr(serve.uvicorn, "run", lambda app, **kwargs: observed.update(app=app, **kwargs))
+    serve.main()
+    assert observed["host"] == "0.0.0.0" and observed["port"] == 8123
+    assert observed["workers"] == 1 and observed["limit_concurrency"] == 16
+    assert not observed["proxy_headers"] and not observed["access_log"]
+    monkeypatch.delenv("CONTOUR_PUBLIC")
+    with pytest.raises(SystemExit, match="run.py"):
+        serve.main()

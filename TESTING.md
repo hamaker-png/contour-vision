@@ -4,6 +4,26 @@ The transform explorer was verified with downloaded internet images, backend/API
 JavaScript graph-state tests, compiled C++ exports and actual browser interactions.
 Sources and licensing notes are in [examples/SOURCES.md](examples/SOURCES.md).
 
+## Public-release pass — September 20, 2026
+
+The local suite passes **139 Python tests and 48 JavaScript tests**. Added coverage
+checks public host/origin rules, bounded request admission, key isolation, sanitized
+errors, cancellation ownership and the single-process launcher. GitHub Actions also
+runs the suite on Linux and builds/runs the production container.
+
+Browser review covers 1280, 1100, 768, 393 and 320 px widths and a 200%-equivalent
+short viewport. It verifies readable operation titles, connected branch arrows,
+mobile menu dismissal, modal scroll locking, selected-step visibility, remembered
+horizontal position, and consistent export selection through target editing.
+The public-mode server was exercised without a key under its actual content security
+policy, including all-image execution and label-canvas zoom. Hosted processing and
+key-transit copy identify the server explicitly. Live OpenAI calls were not made.
+
+Local review logs and screenshots are retained under `artifacts/public-review/`
+(excluded from source control). CI results are available in the repository's
+Actions tab. The historical object-pack and native-export evidence below retains
+its original scope and counts.
+
 ## Offline object-tree pack — September 20, 2026
 
 The current suite passes **129 Python tests and 48 JavaScript tests**. The 20 object
