@@ -50,23 +50,6 @@ photo rotations and teaching silhouettes are practice data, not independent evid
 of deployment reliability. Alternative branches may deliberately perform worse.
 [Image sources and credits](examples/SOURCES.md).
 
-## Host from this GitHub repository
-
-[Deploy on Render](https://render.com/deploy?repo=https://github.com/hamaker-png/contour-vision)
-using the included Dockerfile and `render.yaml`, or use another Linux x86-64 container
-host. A hosting account is required; review its service plan before deploying.
-[Deployment instructions](DEPLOYMENT.md) cover memory, HTTPS, exact hostnames and limits.
-
-GitHub Pages cannot run the Python/native backend. GitHub stores this project's
-source; a running web service gets its own public URL. Public mode disables shared
-server keys and remembered keys, limits queued requests, and rejects unknown hosts.
-There is no cloud project storage or user-account system.
-
-Uploaded images run on the hosting server's CPU. A visitor's optional OpenAI key
-passes through that server to OpenAI for AI requests and is not saved. Projects stay in page memory until saved as a download. Entered keys are cleared
-when the page is reloaded or closed.
-[Images and API keys](PRIVACY.md).
-
 ## How it works
 
 The interface is plain JavaScript and CSS. FastAPI runs the image-processing backend,
