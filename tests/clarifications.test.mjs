@@ -33,3 +33,13 @@ test('many short historical answers and over-budget drafts remain reopenable for
   assert.deepEqual(readGuidance({answers,discovery:null}).answers,answers);
   assert.throws(()=>checkedAnswers(answers),/Shorten them/);
 });
+
+test('import rejects excessive answer lists and cumulative text before rendering',()=>{
+  assert.throws(()=>readGuidance({answers:Array.from({length:20000},(_,i)=>({question:`Q${i}`,answer:'Yes'}))}),/at most 100/);
+  assert.throws(()=>readGuidance({answers:[{question:'One',answer:'x'.repeat(60000)},{question:'Two',answer:'y'.repeat(60000)}]}),/100,000/);
+});
+
+test('linear saved-answer deduplication preserves latest ordering and cleared answers',()=>{
+  const answers=[{question:'A',answer:'old'},{question:'B',answer:'keep'},{question:'A',answer:'new'},{question:'C',answer:'remove'},{question:'C',answer:'   '}];
+  assert.deepEqual(readGuidance({answers}).answers,[{question:'B',answer:'keep'},{question:'A',answer:'new'}]);
+});

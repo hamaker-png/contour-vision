@@ -24,8 +24,13 @@ export async function familyFingerprint(samples){
 export function readGuidance(value){
   if(value==null)return {answers:[],discovery:null};
   const string=(s,max)=>typeof s==='string'&&s.length<=max;
-  if(typeof value!=='object'||!Array.isArray(value.answers)||!value.answers.every(a=>a&&string(a.question,6000)&&string(a.answer,1000000)))throw Error('The saved question answers are invalid. The current project is unchanged.');
-  const answers=value.answers.reduce((all,a)=>updateAnswer(all,a.question,a.answer),[]);
+  if(typeof value!=='object'||!Array.isArray(value.answers))throw Error('The saved question answers are invalid. The current project is unchanged.');
+  if(value.answers.length>100)throw Error('Keep at most 100 clarification answers per project. Clear unneeded earlier answers before saving. The current project is unchanged.');
+  if(!value.answers.every(a=>a&&string(a.question,6000)&&string(a.answer,100000)))throw Error('The saved question answers are invalid. The current project is unchanged.');
+  if(value.answers.reduce((length,a)=>length+a.question.length+a.answer.length,0)>100000)throw Error('Clarification answers exceed 100,000 characters. Shorten long drafts before saving. The current project is unchanged.');
+  const retained=new Map();
+  for(const answer of value.answers){retained.delete(answer.question);if(answer.answer.trim())retained.set(answer.question,{question:answer.question,answer:answer.answer});}
+  const answers=[...retained.values()];
   let discovery=null;
   if(value.discovery!=null){
     const d=value.discovery;

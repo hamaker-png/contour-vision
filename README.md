@@ -4,6 +4,8 @@ A visual workbench for **CPU-only computer vision**. See what every image transf
 does, compare alternative pipelines, measure simple objects and export the result as
 C++. AI can suggest approaches; the person stays in control.
 
+![Two real image-processing paths in Contour](submission/thumbnail.png)
+
 ## Try it locally
 
 Python 3.12 is the tested runtime. The builder needs Python; exported programs do not.
@@ -62,8 +64,8 @@ server keys and remembered keys, limits queued requests, and rejects unknown hos
 There is no cloud project storage or user-account system.
 
 Uploaded images run on the hosting server's CPU. A visitor's optional OpenAI key
-passes through that server to OpenAI for AI requests and is not saved. Projects and
-keys stay in browser page memory until the user saves a project or closes the page.
+passes through that server to OpenAI for AI requests and is not saved. Projects stay in page memory until saved as a download. Entered keys are cleared
+when the page is reloaded or closed.
 [Images and API keys](PRIVACY.md).
 
 ## How it works
@@ -91,7 +93,7 @@ python -m pytest -q
 node --test tests/*.test.mjs
 ```
 
-The public-release local suite passes **139 Python tests and 48 JavaScript tests**.
+The public-release local suite passes **140 Python tests and 50 JavaScript tests**.
 The object pack was exercised on 60 images and 159 branch executions. Three selected
 C++ exports were compiled and checked on nine images, matching final preview pixels
 and 15 measurement stages. These are bounded regression checks, not a universal
@@ -103,7 +105,8 @@ environments and credentials are excluded from source control.
 
 ## Submission materials
 
-[Submission copy](submission/SUBMISSION.md) · [Demo outline](submission/DEMO_SCRIPT.md)
+[Submission copy](submission/SUBMISSION.md) · [Thumbnail](submission/thumbnail.png) ·
+[Demo outline](submission/DEMO_SCRIPT.md)
 
 ## License
 

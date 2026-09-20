@@ -6,7 +6,7 @@ Sources and licensing notes are in [examples/SOURCES.md](examples/SOURCES.md).
 
 ## Public-release pass — September 20, 2026
 
-The local suite passes **139 Python tests and 48 JavaScript tests**. Added coverage
+The local suite passes **140 Python tests and 50 JavaScript tests**. Added coverage
 checks public host/origin rules, bounded request admission, key isolation, sanitized
 errors, cancellation ownership and the single-process launcher. GitHub Actions also
 runs the suite on Linux and builds/runs the production container.
@@ -15,7 +15,10 @@ Browser review covers 1280, 1100, 768, 393 and 320 px widths and a 200%-equivale
 short viewport. It verifies readable operation titles, connected branch arrows,
 mobile menu dismissal, modal scroll locking, selected-step visibility, remembered
 horizontal position, and consistent export selection through target editing.
-The public-mode server was exercised without a key under its actual content security
+A hostile 20,000-answer project import is rejected before rendering and leaves the
+current saved workspace byte-identical. Ordinary imports, long editable drafts and
+C++ downloads remain functional. Two JavaScript regressions enforce bounded, linear
+answer-history normalization. The public-mode server was exercised without a key under its actual content security
 policy, including all-image execution and label-canvas zoom. Hosted processing and
 key-transit copy identify the server explicitly. Live OpenAI calls were not made.
 

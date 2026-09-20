@@ -54,7 +54,11 @@ https://github.com/hamaker-png/contour-vision
 
 ## Other links
 
-Optional: a public documentation or example-pack link in the verified repository. Add a hosted app URL only after its deployment has been verified; `localhost` is not a public demo link.
+Example projects: https://github.com/hamaker-png/contour-vision/tree/main/examples/packs
+
+Deployment guide: https://github.com/hamaker-png/contour-vision/blob/main/DEPLOYMENT.md
+
+A public app URL can be added after creating and checking the hosted service.
 
 ## Video demo
 
@@ -62,7 +66,7 @@ Add the YouTube URL after recording and uploading the demo. The form shown requi
 
 ## Thumbnail
 
-Use the prepared image of the actual application, showing an input, intermediate transforms, and detected objects. It should remain readable as a small thumbnail. Do not substitute a mock interface or an untested result.
+Upload [thumbnail.png](thumbnail.png), a 1440 × 1000 capture of the actual app. It shows the same image processed by a color-based pipeline and a grayscale alternative, including intermediate results and detected objects.
 
 ## Suggested tags, if requested
 

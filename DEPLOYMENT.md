@@ -48,6 +48,8 @@ trusted. TLS is terminated by the hosting platform or your reverse proxy.
 4. Render supplies `PORT` and `RENDER_EXTERNAL_HOSTNAME`. That exact hostname is
    accepted automatically. Add custom domains as a comma-separated
    `CONTOUR_ALLOWED_HOSTS` value. Wildcards and unconfigured hosts are rejected.
+   Omitted HTTPS ports and explicit `:443` are equivalent; other ports must be
+   included explicitly, such as `contour.example.com:8443`.
 5. Leave `CONTOUR_PUBLIC=1`. Do not set `OPENAI_API_KEY` or copy local settings.
    Public mode ignores saved and environment keys. Each visitor supplies their own.
 
@@ -86,9 +88,11 @@ image and starts it with a read-only filesystem and resource caps. It checks
 public health, Host policy, non-root identity and an actual native CImg operation.
 It does not deploy. Locally, the policy and cancellation tests run without live AI.
 
-This development machine has no Docker runtime. Container execution must be verified
-by CI or the commands above before claiming a working deployment. Linux wheel
-resolution is checked separately; dependency availability is not a container smoke test.
+The Linux x86-64 container build and smoke test passed on September 20, 2026 for
+commit `b633506` in [GitHub Actions run 35493226806](https://github.com/hamaker-png/contour-vision/actions/runs/35493226806).
+That run also passed the Linux Python and JavaScript suites. This verifies the
+container setup; it does not establish a deployed Render service or production load capacity.
+This development machine has no Docker runtime, so the container execution happened in CI.
 Rebuild and rerun tests when updating the pinned runtime dependencies.
 
 References: [Render Docker services](https://render.com/docs/docker),

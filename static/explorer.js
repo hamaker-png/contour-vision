@@ -624,6 +624,7 @@ function renderDraft() {
 }
 function saveWorkspace() {
   if(parameterDrafts.size){const id=[...parameterDrafts.entries.keys()][0];select(ownerOf(id).id,id);return notify('Apply or reset pending parameters before saving the project.');}
+  try{readGuidance({answers:state.questionAnswers,discovery:state.discovery});}catch(error){return notify(error.message);}
   const body={version:1,...runBody(),selected:state.selected,description:$('description').value,context:$('context').value,answers:$('answers').value,guidance:{answers:state.questionAnswers,discovery:state.discovery},ai_exposure:exposure.save()};
   const url=URL.createObjectURL(new Blob([JSON.stringify(body,null,2)],{type:'application/json'})), a=document.createElement('a');
   a.href=url; a.download='contour-workspace.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(url),1000);

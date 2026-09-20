@@ -114,6 +114,7 @@ dialog::backdrop{background:#172a2059;backdrop-filter:blur(2px)}
 
 /* Comparison favors side-by-side evidence; Focus retains full editing controls. */
 .editor-view .node-wrap>.node{flex:1 0 auto}
+.editor-view .node-meta>span{display:block}
 .journey-nav button .nav-label,.journey-nav button[aria-current=step] .nav-label{display:inline;width:auto;height:auto;flex:initial;border:0;border-radius:0;background:transparent;color:inherit;font-size:inherit}
 .comparison-mode{--card:150px}
 .editor-view .comparison-mode .node{min-height:0}

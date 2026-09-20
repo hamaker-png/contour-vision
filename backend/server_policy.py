@@ -34,6 +34,10 @@ def authority(value):
         return None
 
 
+def with_default_port(value, default):
+    return None if value is None else (value[0], default if value[1] is None else value[1])
+
+
 def configured_hosts():
     values = os.environ.get("CONTOUR_ALLOWED_HOSTS", "").split(",")
     # Render supplies its own exact service hostname, without a wildcard.
@@ -45,7 +49,8 @@ def configured_hosts():
         parsed = authority(value.strip())
         if parsed is None or "*" in value:
             raise RuntimeError("CONTOUR_ALLOWED_HOSTS must contain exact hostnames, optionally with ports")
-        hosts.add(parsed)
+        # Public browser origins require HTTPS, whose omitted port is 443.
+        hosts.add(with_default_port(parsed, 443))
     return hosts
 
 
@@ -55,7 +60,7 @@ def request_origin_error(request):
         return "Invalid request host"
     local = host[0] in LOOPBACK or (host[0] == "testserver" and
                                    (not public_mode() or request.client and request.client.host == "testclient"))
-    if not local and (not public_mode() or host not in configured_hosts()):
+    if not local and (not public_mode() or with_default_port(host, 443) not in configured_hosts()):
         return "This host is not configured for Contour"
     origin = request.headers.get("origin")
     if origin:
@@ -65,7 +70,9 @@ def request_origin_error(request):
         except ValueError:
             return "Cross-origin requests are disabled"
         schemes = {"http", "https"} if local else {"https"}
-        if (parsed.scheme not in schemes or origin_host != host or parsed.path or
+        default_port = 443 if parsed.scheme == "https" else 80
+        if (parsed.scheme not in schemes or
+                with_default_port(origin_host, default_port) != with_default_port(host, default_port) or parsed.path or
                 parsed.query or parsed.fragment or parsed.username or parsed.password):
             return "Cross-origin requests are disabled"
     if request.headers.get("sec-fetch-site") == "cross-site":

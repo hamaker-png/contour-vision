@@ -73,6 +73,24 @@ def test_unconfigured_public_host_fails_closed_and_loopback_health_works(public,
         assert client.get("/api/health").status_code == 200
 
 
+def test_https_default_ports_are_equivalent_but_custom_ports_are_isolated(public, monkeypatch):
+    for configured in ("contour.example", "CONTOUR.EXAMPLE:443"):
+        monkeypatch.setenv("CONTOUR_ALLOWED_HOSTS", configured)
+        for host in ("contour.example", "contour.example:443"):
+            for origin in ("https://contour.example", "https://contour.example:443"):
+                assert public.get("/api/health", headers={"host": host, "origin": origin}).status_code == 200
+        assert public.get("/api/health", headers={"host": "contour.example:8443"}).status_code == 403
+        assert public.get("/api/health", headers={"origin": "https://contour.example:8443"}).status_code == 403
+        assert public.get("/api/health", headers={"origin": "http://contour.example:443"}).status_code == 403
+    monkeypatch.setenv("CONTOUR_ALLOWED_HOSTS", "contour.example:8443")
+    assert public.get("/api/health", headers={"host": "contour.example:8443", "origin": "https://contour.example:8443"}).status_code == 200
+    assert public.get("/api/health").status_code == 403
+    assert public.get("/api/health", headers={"host": "contour.example:8443", "origin": "https://contour.example"}).status_code == 403
+    # The local HTTP workflow retains its own default port, never treating 443 as 80.
+    assert public.get("/api/health", headers={"host": "localhost:80", "origin": "http://localhost"}).status_code == 200
+    assert public.get("/api/health", headers={"host": "localhost:8000", "origin": "http://localhost"}).status_code == 403
+
+
 def test_json_only_size_and_key_bounds(public, monkeypatch):
     assert public.post("/api/local-settings", content="key=secret").status_code == 415
     assert public.post("/api/local-settings", json={}, headers={"x-openai-key": "secret value"}).status_code == 400
