@@ -1,0 +1,2611 @@
+[
+  {
+    "id": "a-washers",
+    "title": "Washers with through-holes · 2D",
+    "category": "Object tests · 2D",
+    "collection": "object-tests",
+    "description": "Find the two gray washers with enclosed holes; reject the solid disk and open-ring distractors.",
+    "context": "Generated flat 2D teaching images with exact rendered-mask boxes; not natural-image reliability evidence. Material area excludes each hole. The opening branch distinguishes enclosed holes from a C-shaped gap; connected-region width and length are axis-aligned extents.",
+    "source": "",
+    "credit": "Generated deterministic 2D teaching illustration · exact analytic-mask labels",
+    "workbench_only": true,
+    "filename": "object-tests/a-washers-base.png",
+    "path": "/examples/object-tests/a-washers-base.png",
+    "boxes": [
+      {
+        "x": 0.18541666666666667,
+        "y": 0.203125,
+        "width": 0.13958333333333334,
+        "height": 0.209375
+      },
+      {
+        "x": 0.66875,
+        "y": 0.615625,
+        "width": 0.12291666666666666,
+        "height": 0.184375
+      }
+    ],
+    "labeled": true,
+    "samples": [
+      {
+        "id": "a-washers-base",
+        "name": "Two objects with a distractor",
+        "filename": "object-tests/a-washers-base.png",
+        "path": "/examples/object-tests/a-washers-base.png",
+        "boxes": [
+          {
+            "x": 0.18541666666666667,
+            "y": 0.203125,
+            "width": 0.13958333333333334,
+            "height": 0.209375
+          },
+          {
+            "x": 0.66875,
+            "y": 0.615625,
+            "width": 0.12291666666666666,
+            "height": 0.184375
+          }
+        ],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 2,
+        "expected": {
+          "count": 2,
+          "min_iou": 0.5,
+          "max_false_positives": 0
+        },
+        "source_sha256": "9d90c279ca6401e2112706185560cf53fd0612f400302e04dfafe2551bc8fee6",
+        "target_pixel_areas": [
+          2700,
+          2112
+        ],
+        "teaching_check": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "mean_matched_iou": 1.0000000000000004,
+          "min_matched_iou": 0.9999999999999998,
+          "material_area_exact": true,
+          "branch_counts": {
+            "main": 3,
+            "holes": 2,
+            "confirmed": 2
+          }
+        }
+      },
+      {
+        "id": "a-washers-variation",
+        "name": "Moved, rotated and dimmed",
+        "filename": "object-tests/a-washers-variation.png",
+        "path": "/examples/object-tests/a-washers-variation.png",
+        "boxes": [
+          {
+            "x": 0.19375,
+            "y": 0.609375,
+            "width": 0.13125,
+            "height": 0.196875
+          },
+          {
+            "x": 0.6395833333333333,
+            "y": 0.1875,
+            "width": 0.14375,
+            "height": 0.215625
+          }
+        ],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 2,
+        "expected": {
+          "count": 2,
+          "min_iou": 0.5,
+          "max_false_positives": 0
+        },
+        "source_sha256": "55d2f6c107aa6f8f30a91b0008c95f79aa7f0852e2c4d16c73a30fe7a59fac5e",
+        "target_pixel_areas": [
+          2384,
+          2920
+        ],
+        "teaching_check": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "mean_matched_iou": 0.9999999999999998,
+          "min_matched_iou": 0.9999999999999993,
+          "material_area_exact": true,
+          "branch_counts": {
+            "main": 3,
+            "holes": 2,
+            "confirmed": 2
+          }
+        }
+      },
+      {
+        "id": "a-washers-negative",
+        "name": "Distractors only",
+        "filename": "object-tests/a-washers-negative.png",
+        "path": "/examples/object-tests/a-washers-negative.png",
+        "boxes": [],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 0,
+        "expected": {
+          "count": 0,
+          "min_iou": 0.5,
+          "max_false_positives": 0
+        },
+        "source_sha256": "3197eedfeb5f3ecdbb88df8d9fb0381dc490e3af034ae4f34b467a785896f723",
+        "target_pixel_areas": [],
+        "teaching_check": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "mean_matched_iou": null,
+          "min_matched_iou": null,
+          "material_area_exact": true,
+          "branch_counts": {
+            "main": 3,
+            "holes": 0,
+            "confirmed": 0
+          }
+        }
+      }
+    ],
+    "pipelines": [
+      {
+        "id": "main",
+        "name": "Material pixels",
+        "parent_id": null,
+        "fork_after": null,
+        "rationale": "Select the visible material and measure it. Solid same-color distractors can also survive this first detector.",
+        "operations": [
+          {
+            "id": "input_resize",
+            "kind": "resize",
+            "params": {
+              "max_side": 480
+            }
+          },
+          {
+            "id": "gray",
+            "kind": "grayscale",
+            "params": {}
+          },
+          {
+            "id": "object_mask",
+            "kind": "range_mask",
+            "params": {
+              "low": 80,
+              "high": 190
+            }
+          },
+          {
+            "id": "primary",
+            "kind": "cimg_components",
+            "params": {
+              "connectivity": "8",
+              "min_pixels": 300,
+              "max_pixels": 15000,
+              "reject_border": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "holes",
+        "name": "Enclosed openings",
+        "parent_id": "main",
+        "fork_after": "object_mask",
+        "rationale": "Invert the mask, then reject the border-connected outside background. Only enclosed openings remain; an open ring has no enclosed opening.",
+        "operations": [
+          {
+            "id": "inside_background",
+            "kind": "invert",
+            "params": {}
+          },
+          {
+            "id": "hole_regions",
+            "kind": "cimg_components",
+            "params": {
+              "connectivity": "8",
+              "min_pixels": 100,
+              "max_pixels": 10000,
+              "reject_border": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "confirmed",
+        "name": "Objects with enclosed openings",
+        "parent_id": "main",
+        "fork_after": "primary",
+        "rationale": "Require a matching interior opening. Keep the original object bounds and material measurements. This tests the illustrated feature, not a learned object category.",
+        "operations": [
+          {
+            "id": "agreement",
+            "kind": "confirm",
+            "params": {
+              "pipeline_ids": "holes",
+              "min_support": 1,
+              "iou": 0.08,
+              "match_text": false
+            }
+          }
+        ]
+      }
+    ],
+    "recommended_timeline_id": "confirmed",
+    "suggested_measurements": [
+      "length",
+      "width",
+      "area",
+      "center"
+    ],
+    "expected": {
+      "recommended_timeline_id": "confirmed",
+      "counts": [
+        2,
+        2,
+        0
+      ],
+      "min_iou": 0.5,
+      "max_false_positives": 0
+    },
+    "generation": {
+      "script": "scripts/build_object_examples_a.py",
+      "deterministic": true,
+      "image_size": [
+        480,
+        320
+      ],
+      "labels": "Exact bounding boxes of rendered object masks",
+      "evidence": "Teaching/development fixtures; no held-out accuracy claim"
+    }
+  },
+  {
+    "id": "a-hex-nuts",
+    "title": "Hex nuts with center openings · 2D",
+    "category": "Object tests · 2D",
+    "collection": "object-tests",
+    "description": "Find the two illustrated metal hex nuts with central openings; reject solid metal pieces.",
+    "context": "Generated flat 2D teaching images with exact rendered-mask boxes; not natural-image reliability evidence. Compare the cornered silhouettes and the enclosed-opening evidence. This fixture tests gray material plus an opening; it does not claim to count polygon vertices or distinguish every washer from a nut.",
+    "source": "",
+    "credit": "Generated deterministic 2D teaching illustration · exact analytic-mask labels",
+    "workbench_only": true,
+    "filename": "object-tests/a-hex-nuts-base.png",
+    "path": "/examples/object-tests/a-hex-nuts-base.png",
+    "boxes": [
+      {
+        "x": 0.18333333333333332,
+        "y": 0.184375,
+        "width": 0.14375,
+        "height": 0.246875
+      },
+      {
+        "x": 0.6625,
+        "y": 0.6,
+        "width": 0.13541666666666666,
+        "height": 0.215625
+      }
+    ],
+    "labeled": true,
+    "samples": [
+      {
+        "id": "a-hex-nuts-base",
+        "name": "Two objects with a distractor",
+        "filename": "object-tests/a-hex-nuts-base.png",
+        "path": "/examples/object-tests/a-hex-nuts-base.png",
+        "boxes": [
+          {
+            "x": 0.18333333333333332,
+            "y": 0.184375,
+            "width": 0.14375,
+            "height": 0.246875
+          },
+          {
+            "x": 0.6625,
+            "y": 0.6,
+            "width": 0.13541666666666666,
+            "height": 0.215625
+          }
+        ],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 2,
+        "expected": {
+          "count": 2,
+          "min_iou": 0.5,
+          "max_false_positives": 0
+        },
+        "source_sha256": "b7cbbc950d0feb22b5f7d64cedbe3b1ae5fc96c968957080aee90d728b28d087",
+        "target_pixel_areas": [
+          3473,
+          2686
+        ],
+        "teaching_check": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "mean_matched_iou": 0.9999999999999999,
+          "min_matched_iou": 0.9999999999999996,
+          "material_area_exact": true,
+          "branch_counts": {
+            "main": 3,
+            "holes": 2,
+            "confirmed": 2
+          }
+        }
+      },
+      {
+        "id": "a-hex-nuts-variation",
+        "name": "Moved, rotated and dimmed",
+        "filename": "object-tests/a-hex-nuts-variation.png",
+        "path": "/examples/object-tests/a-hex-nuts-variation.png",
+        "boxes": [
+          {
+            "x": 0.18333333333333332,
+            "y": 0.6,
+            "width": 0.15416666666666667,
+            "height": 0.215625
+          },
+          {
+            "x": 0.625,
+            "y": 0.178125,
+            "width": 0.17083333333333334,
+            "height": 0.234375
+          }
+        ],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 2,
+        "expected": {
+          "count": 2,
+          "min_iou": 0.5,
+          "max_false_positives": 0
+        },
+        "source_sha256": "2a44903b2d674e9f3eae313c547d6e3e50944fbab33773dd3c00325886a5a359",
+        "target_pixel_areas": [
+          3068,
+          3759
+        ],
+        "teaching_check": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "mean_matched_iou": 1.0000000000000007,
+          "min_matched_iou": 1.0000000000000004,
+          "material_area_exact": true,
+          "branch_counts": {
+            "main": 3,
+            "holes": 2,
+            "confirmed": 2
+          }
+        }
+      },
+      {
+        "id": "a-hex-nuts-negative",
+        "name": "Distractors only",
+        "filename": "object-tests/a-hex-nuts-negative.png",
+        "path": "/examples/object-tests/a-hex-nuts-negative.png",
+        "boxes": [],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 0,
+        "expected": {
+          "count": 0,
+          "min_iou": 0.5,
+          "max_false_positives": 0
+        },
+        "source_sha256": "7326f314c1d2cd16bb62044fbf7b4d4741b6b1115e280c4f5e8059d25f88bc19",
+        "target_pixel_areas": [],
+        "teaching_check": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "mean_matched_iou": null,
+          "min_matched_iou": null,
+          "material_area_exact": true,
+          "branch_counts": {
+            "main": 3,
+            "holes": 0,
+            "confirmed": 0
+          }
+        }
+      }
+    ],
+    "pipelines": [
+      {
+        "id": "main",
+        "name": "Material pixels",
+        "parent_id": null,
+        "fork_after": null,
+        "rationale": "Select the visible material and measure it. Solid same-color distractors can also survive this first detector.",
+        "operations": [
+          {
+            "id": "input_resize",
+            "kind": "resize",
+            "params": {
+              "max_side": 480
+            }
+          },
+          {
+            "id": "gray",
+            "kind": "grayscale",
+            "params": {}
+          },
+          {
+            "id": "object_mask",
+            "kind": "range_mask",
+            "params": {
+              "low": 80,
+              "high": 190
+            }
+          },
+          {
+            "id": "primary",
+            "kind": "cimg_components",
+            "params": {
+              "connectivity": "8",
+              "min_pixels": 300,
+              "max_pixels": 15000,
+              "reject_border": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "holes",
+        "name": "Enclosed openings",
+        "parent_id": "main",
+        "fork_after": "object_mask",
+        "rationale": "Invert the mask, then reject the border-connected outside background. Only enclosed openings remain; an open ring has no enclosed opening.",
+        "operations": [
+          {
+            "id": "inside_background",
+            "kind": "invert",
+            "params": {}
+          },
+          {
+            "id": "hole_regions",
+            "kind": "cimg_components",
+            "params": {
+              "connectivity": "8",
+              "min_pixels": 100,
+              "max_pixels": 10000,
+              "reject_border": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "confirmed",
+        "name": "Objects with enclosed openings",
+        "parent_id": "main",
+        "fork_after": "primary",
+        "rationale": "Require a matching interior opening. Keep the original object bounds and material measurements. This tests the illustrated feature, not a learned object category.",
+        "operations": [
+          {
+            "id": "agreement",
+            "kind": "confirm",
+            "params": {
+              "pipeline_ids": "holes",
+              "min_support": 1,
+              "iou": 0.08,
+              "match_text": false
+            }
+          }
+        ]
+      }
+    ],
+    "recommended_timeline_id": "confirmed",
+    "suggested_measurements": [
+      "length",
+      "width",
+      "area",
+      "color"
+    ],
+    "expected": {
+      "recommended_timeline_id": "confirmed",
+      "counts": [
+        2,
+        2,
+        0
+      ],
+      "min_iou": 0.5,
+      "max_false_positives": 0
+    },
+    "generation": {
+      "script": "scripts/build_object_examples_a.py",
+      "deterministic": true,
+      "image_size": [
+        480,
+        320
+      ],
+      "labels": "Exact bounding boxes of rendered object masks",
+      "evidence": "Teaching/development fixtures; no held-out accuracy claim"
+    }
+  },
+  {
+    "id": "a-long-bolts",
+    "title": "Long bolts and short metal parts · 2D",
+    "category": "Object tests · 2D",
+    "collection": "object-tests",
+    "description": "Find the two long bolts; ignore compact metal pieces. Measure full head-to-tip extent and orientation.",
+    "context": "Generated flat 2D teaching images with exact rendered-mask boxes; not natural-image reliability evidence. The elongated silhouette includes the bolt head and coarse illustrated thread teeth. Otsu follows the uniform brightness change; the edge alternative reveals tooth fragmentation.",
+    "source": "",
+    "credit": "Generated deterministic 2D teaching illustration · exact analytic-mask labels",
+    "workbench_only": true,
+    "filename": "object-tests/a-long-bolts-base.png",
+    "path": "/examples/object-tests/a-long-bolts-base.png",
+    "boxes": [
+      {
+        "x": 0.09791666666666667,
+        "y": 0.240625,
+        "width": 0.3125,
+        "height": 0.134375
+      },
+      {
+        "x": 0.5875,
+        "y": 0.625,
+        "width": 0.2791666666666667,
+        "height": 0.1375
+      }
+    ],
+    "labeled": true,
+    "samples": [
+      {
+        "id": "a-long-bolts-base",
+        "name": "Two objects with a distractor",
+        "filename": "object-tests/a-long-bolts-base.png",
+        "path": "/examples/object-tests/a-long-bolts-base.png",
+        "boxes": [
+          {
+            "x": 0.09791666666666667,
+            "y": 0.240625,
+            "width": 0.3125,
+            "height": 0.134375
+          },
+          {
+            "x": 0.5875,
+            "y": 0.625,
+            "width": 0.2791666666666667,
+            "height": 0.1375
+          }
+        ],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 2,
+        "expected": {
+          "count": 2,
+          "min_iou": 0.5,
+          "max_false_positives": 0
+        },
+        "source_sha256": "88ce8fe6f16b8189b18e134b90be1657cd326c0c198229ab36ebfff7734949b5",
+        "target_pixel_areas": [
+          3534,
+          2740
+        ],
+        "teaching_check": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "mean_matched_iou": 0.9999999999999996,
+          "min_matched_iou": 0.9999999999999992,
+          "material_area_exact": null,
+          "branch_counts": {
+            "main": 2,
+            "edges": 2
+          }
+        }
+      },
+      {
+        "id": "a-long-bolts-variation",
+        "name": "Moved, rotated and dimmed",
+        "filename": "object-tests/a-long-bolts-variation.png",
+        "path": "/examples/object-tests/a-long-bolts-variation.png",
+        "boxes": [
+          {
+            "x": 0.10625,
+            "y": 0.603125,
+            "width": 0.29583333333333334,
+            "height": 0.24375
+          },
+          {
+            "x": 0.54375,
+            "y": 0.134375,
+            "width": 0.3229166666666667,
+            "height": 0.28125
+          }
+        ],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 2,
+        "expected": {
+          "count": 2,
+          "min_iou": 0.5,
+          "max_false_positives": 0
+        },
+        "source_sha256": "0f7927e0de042cfea8626c91f07c5f30d01d17600867e18c4c93004c58be66b3",
+        "target_pixel_areas": [
+          3119,
+          3822
+        ],
+        "teaching_check": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "mean_matched_iou": 1.0000000000000004,
+          "min_matched_iou": 1.0,
+          "material_area_exact": null,
+          "branch_counts": {
+            "main": 2,
+            "edges": 0
+          }
+        }
+      },
+      {
+        "id": "a-long-bolts-negative",
+        "name": "Distractors only",
+        "filename": "object-tests/a-long-bolts-negative.png",
+        "path": "/examples/object-tests/a-long-bolts-negative.png",
+        "boxes": [],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 0,
+        "expected": {
+          "count": 0,
+          "min_iou": 0.5,
+          "max_false_positives": 0
+        },
+        "source_sha256": "7ee7f501f146b6e8ff0a2bea779d095c39904c78e73f0f5e7db85fccb36522d3",
+        "target_pixel_areas": [],
+        "teaching_check": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "mean_matched_iou": null,
+          "min_matched_iou": null,
+          "material_area_exact": null,
+          "branch_counts": {
+            "main": 0,
+            "edges": 0
+          }
+        }
+      }
+    ],
+    "pipelines": [
+      {
+        "id": "main",
+        "name": "Complete silhouette length",
+        "parent_id": null,
+        "fork_after": null,
+        "rationale": "Separate the silhouette from the plain background with Otsu, then require an elongated shape. Rotated rectangle measurements include the full tip or bolt head.",
+        "operations": [
+          {
+            "id": "input_resize",
+            "kind": "resize",
+            "params": {
+              "max_side": 480
+            }
+          },
+          {
+            "id": "gray",
+            "kind": "grayscale",
+            "params": {}
+          },
+          {
+            "id": "light_mask",
+            "kind": "otsu",
+            "params": {}
+          },
+          {
+            "id": "body_mask",
+            "kind": "invert",
+            "params": {}
+          },
+          {
+            "id": "long_objects",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.003,
+              "max_area": 0.08,
+              "min_circularity": 0.0,
+              "min_solidity": 0.5,
+              "min_aspect": 3.0,
+              "max_aspect": 15.0,
+              "reject_border": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "edges",
+        "name": "Edge outline comparison",
+        "parent_id": "main",
+        "fork_after": "gray",
+        "rationale": "Compare thin edges with the filled silhouette. Small teeth make the edge path more fragmented; inspect its intermediate mask.",
+        "operations": [
+          {
+            "id": "outline_edges",
+            "kind": "canny",
+            "params": {
+              "low": 40,
+              "high": 110
+            }
+          },
+          {
+            "id": "closed_edges",
+            "kind": "morph_close",
+            "params": {
+              "kernel": 3
+            }
+          },
+          {
+            "id": "edge_objects",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.003,
+              "max_area": 0.08,
+              "min_circularity": 0.0,
+              "min_solidity": 0.5,
+              "min_aspect": 3.0,
+              "max_aspect": 15.0,
+              "reject_border": true
+            }
+          }
+        ]
+      }
+    ],
+    "recommended_timeline_id": "main",
+    "suggested_measurements": [
+      "length",
+      "width",
+      "angle",
+      "area"
+    ],
+    "expected": {
+      "recommended_timeline_id": "main",
+      "counts": [
+        2,
+        2,
+        0
+      ],
+      "min_iou": 0.5,
+      "max_false_positives": 0
+    },
+    "generation": {
+      "script": "scripts/build_object_examples_a.py",
+      "deterministic": true,
+      "image_size": [
+        480,
+        320
+      ],
+      "labels": "Exact bounding boxes of rendered object masks",
+      "evidence": "Teaching/development fixtures; no held-out accuracy claim"
+    }
+  },
+  {
+    "id": "a-keys",
+    "title": "Brass keys with ring holes · 2D",
+    "category": "Object tests · 2D",
+    "collection": "object-tests",
+    "description": "Find the two brass keys with enclosed head holes; ignore solid brass shapes.",
+    "context": "Generated flat 2D teaching images with exact rendered-mask boxes; not natural-image reliability evidence. Color proposes brass silhouettes, aspect keeps long candidates, and an enclosed head opening supplies confirmation. Length is the rotated outer extent, not a key-cut specification.",
+    "source": "",
+    "credit": "Generated deterministic 2D teaching illustration · exact analytic-mask labels",
+    "workbench_only": true,
+    "filename": "object-tests/a-keys-base.png",
+    "path": "/examples/object-tests/a-keys-base.png",
+    "boxes": [
+      {
+        "x": 0.1125,
+        "y": 0.225,
+        "width": 0.3,
+        "height": 0.165625
+      },
+      {
+        "x": 0.60625,
+        "y": 0.621875,
+        "width": 0.2625,
+        "height": 0.159375
+      }
+    ],
+    "labeled": true,
+    "samples": [
+      {
+        "id": "a-keys-base",
+        "name": "Two objects with a distractor",
+        "filename": "object-tests/a-keys-base.png",
+        "path": "/examples/object-tests/a-keys-base.png",
+        "boxes": [
+          {
+            "x": 0.1125,
+            "y": 0.225,
+            "width": 0.3,
+            "height": 0.165625
+          },
+          {
+            "x": 0.60625,
+            "y": 0.621875,
+            "width": 0.2625,
+            "height": 0.159375
+          }
+        ],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 2,
+        "expected": {
+          "count": 2,
+          "min_iou": 0.5,
+          "max_false_positives": 0
+        },
+        "source_sha256": "37222de29f6fc744ace88732dccb188e8c2be508ca2a911e0751922cc284e971",
+        "target_pixel_areas": [
+          3371,
+          2600
+        ],
+        "teaching_check": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "mean_matched_iou": 1.0,
+          "min_matched_iou": 1.0,
+          "material_area_exact": null,
+          "branch_counts": {
+            "main": 2,
+            "holes": 2,
+            "confirmed": 2
+          }
+        }
+      },
+      {
+        "id": "a-keys-variation",
+        "name": "Moved, rotated and dimmed",
+        "filename": "object-tests/a-keys-variation.png",
+        "path": "/examples/object-tests/a-keys-variation.png",
+        "boxes": [
+          {
+            "x": 0.13125,
+            "y": 0.609375,
+            "width": 0.2708333333333333,
+            "height": 0.21875
+          },
+          {
+            "x": 0.5708333333333333,
+            "y": 0.15625,
+            "width": 0.29791666666666666,
+            "height": 0.278125
+          }
+        ],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 2,
+        "expected": {
+          "count": 2,
+          "min_iou": 0.5,
+          "max_false_positives": 0
+        },
+        "source_sha256": "250ccb432a67c6d340d9ff6b6736af09acf413efbc2042758cc9d086e2d3f436",
+        "target_pixel_areas": [
+          2977,
+          3648
+        ],
+        "teaching_check": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "mean_matched_iou": 1.0,
+          "min_matched_iou": 0.9999999999999997,
+          "material_area_exact": null,
+          "branch_counts": {
+            "main": 2,
+            "holes": 2,
+            "confirmed": 2
+          }
+        }
+      },
+      {
+        "id": "a-keys-negative",
+        "name": "Distractors only",
+        "filename": "object-tests/a-keys-negative.png",
+        "path": "/examples/object-tests/a-keys-negative.png",
+        "boxes": [],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 0,
+        "expected": {
+          "count": 0,
+          "min_iou": 0.5,
+          "max_false_positives": 0
+        },
+        "source_sha256": "323c8653ed6da8661de04431435d6612fbd2c272492f58a3bac34928ff44aff6",
+        "target_pixel_areas": [],
+        "teaching_check": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "mean_matched_iou": null,
+          "min_matched_iou": null,
+          "material_area_exact": null,
+          "branch_counts": {
+            "main": 2,
+            "holes": 0,
+            "confirmed": 0
+          }
+        }
+      }
+    ],
+    "pipelines": [
+      {
+        "id": "main",
+        "name": "Outer object dimensions",
+        "parent_id": null,
+        "fork_after": null,
+        "rationale": "Select the visible material and measure it. Solid same-color distractors can also survive this first detector.",
+        "operations": [
+          {
+            "id": "input_resize",
+            "kind": "resize",
+            "params": {
+              "max_side": 480
+            }
+          },
+          {
+            "id": "object_mask",
+            "kind": "hsv_mask",
+            "params": {
+              "hue_low": 16,
+              "hue_high": 35,
+              "saturation_low": 100,
+              "saturation_high": 255,
+              "value_low": 60,
+              "value_high": 255
+            }
+          },
+          {
+            "id": "primary",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.003,
+              "max_area": 0.1,
+              "min_circularity": 0.0,
+              "min_solidity": 0.45,
+              "min_aspect": 1.8,
+              "max_aspect": 5.0,
+              "reject_border": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "holes",
+        "name": "Enclosed openings",
+        "parent_id": "main",
+        "fork_after": "object_mask",
+        "rationale": "Invert the mask, then reject the border-connected outside background. Only enclosed openings remain; an open ring has no enclosed opening.",
+        "operations": [
+          {
+            "id": "inside_background",
+            "kind": "invert",
+            "params": {}
+          },
+          {
+            "id": "hole_regions",
+            "kind": "cimg_components",
+            "params": {
+              "connectivity": "8",
+              "min_pixels": 100,
+              "max_pixels": 10000,
+              "reject_border": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "confirmed",
+        "name": "Objects with enclosed openings",
+        "parent_id": "main",
+        "fork_after": "primary",
+        "rationale": "Require a matching interior opening. Keep the original object bounds and material measurements. This tests the illustrated feature, not a learned object category.",
+        "operations": [
+          {
+            "id": "agreement",
+            "kind": "confirm",
+            "params": {
+              "pipeline_ids": "holes",
+              "min_support": 1,
+              "iou": 0.02,
+              "match_text": false
+            }
+          }
+        ]
+      }
+    ],
+    "recommended_timeline_id": "confirmed",
+    "suggested_measurements": [
+      "length",
+      "width",
+      "angle",
+      "color"
+    ],
+    "expected": {
+      "recommended_timeline_id": "confirmed",
+      "counts": [
+        2,
+        2,
+        0
+      ],
+      "min_iou": 0.5,
+      "max_false_positives": 0
+    },
+    "generation": {
+      "script": "scripts/build_object_examples_a.py",
+      "deterministic": true,
+      "image_size": [
+        480,
+        320
+      ],
+      "labels": "Exact bounding boxes of rendered object masks",
+      "evidence": "Teaching/development fixtures; no held-out accuracy claim"
+    }
+  },
+  {
+    "id": "a-red-buttons",
+    "title": "Red push-button faces · 2D",
+    "category": "Object tests · 2D",
+    "collection": "object-tests",
+    "description": "Find the two red circular button faces; reject red squares, stretched pieces and a blue circle.",
+    "context": "Generated flat 2D teaching images with exact rendered-mask boxes; not natural-image reliability evidence. The object is the illustrated red face. Compare hue plus circularity with a brightness-only branch; these measurements describe the face outline, not a mechanical housing.",
+    "source": "",
+    "credit": "Generated deterministic 2D teaching illustration · exact analytic-mask labels",
+    "workbench_only": true,
+    "filename": "object-tests/a-red-buttons-base.png",
+    "path": "/examples/object-tests/a-red-buttons-base.png",
+    "boxes": [
+      {
+        "x": 0.19375,
+        "y": 0.215625,
+        "width": 0.12291666666666666,
+        "height": 0.184375
+      },
+      {
+        "x": 0.6770833333333334,
+        "y": 0.628125,
+        "width": 0.10625,
+        "height": 0.159375
+      }
+    ],
+    "labeled": true,
+    "samples": [
+      {
+        "id": "a-red-buttons-base",
+        "name": "Two objects with a distractor",
+        "filename": "object-tests/a-red-buttons-base.png",
+        "path": "/examples/object-tests/a-red-buttons-base.png",
+        "boxes": [
+          {
+            "x": 0.19375,
+            "y": 0.215625,
+            "width": 0.12291666666666666,
+            "height": 0.184375
+          },
+          {
+            "x": 0.6770833333333334,
+            "y": 0.628125,
+            "width": 0.10625,
+            "height": 0.159375
+          }
+        ],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 2,
+        "expected": {
+          "count": 2,
+          "min_iou": 0.5,
+          "max_false_positives": 0
+        },
+        "source_sha256": "bc4bb3ed5112fd8a89d078b08cbeaa8adc19b4420fe8aba862cfcc1b33b3b13e",
+        "target_pixel_areas": [
+          2629,
+          2029
+        ],
+        "teaching_check": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "mean_matched_iou": 0.9666762424590631,
+          "min_matched_iou": 0.9333524849181267,
+          "material_area_exact": null,
+          "branch_counts": {
+            "main": 2,
+            "brightness": 2
+          }
+        }
+      },
+      {
+        "id": "a-red-buttons-variation",
+        "name": "Moved, rotated and dimmed",
+        "filename": "object-tests/a-red-buttons-variation.png",
+        "path": "/examples/object-tests/a-red-buttons-variation.png",
+        "boxes": [
+          {
+            "x": 0.20208333333333334,
+            "y": 0.621875,
+            "width": 0.11458333333333333,
+            "height": 0.171875
+          },
+          {
+            "x": 0.6479166666666667,
+            "y": 0.2,
+            "width": 0.12708333333333333,
+            "height": 0.190625
+          }
+        ],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 2,
+        "expected": {
+          "count": 2,
+          "min_iou": 0.5,
+          "max_false_positives": 0
+        },
+        "source_sha256": "660013c150afbd7a086a5756a823912bd324480e732f9bd12ed5a87a3ab69a44",
+        "target_pixel_areas": [
+          2333,
+          2845
+        ],
+        "teaching_check": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "mean_matched_iou": 1.0,
+          "min_matched_iou": 1.0,
+          "material_area_exact": null,
+          "branch_counts": {
+            "main": 2,
+            "brightness": 2
+          }
+        }
+      },
+      {
+        "id": "a-red-buttons-negative",
+        "name": "Distractors only",
+        "filename": "object-tests/a-red-buttons-negative.png",
+        "path": "/examples/object-tests/a-red-buttons-negative.png",
+        "boxes": [],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 0,
+        "expected": {
+          "count": 0,
+          "min_iou": 0.5,
+          "max_false_positives": 0
+        },
+        "source_sha256": "232b7ed8a6c7b39110dc617b36eb22381ad56bbba3db8f0a01bddd4993478c5d",
+        "target_pixel_areas": [],
+        "teaching_check": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "mean_matched_iou": null,
+          "min_matched_iou": null,
+          "material_area_exact": null,
+          "branch_counts": {
+            "main": 0,
+            "brightness": 1
+          }
+        }
+      }
+    ],
+    "pipelines": [
+      {
+        "id": "main",
+        "name": "Color and round outline",
+        "parent_id": null,
+        "fork_after": null,
+        "rationale": "Select the object color, smooth single-pixel raster irregularities, then reject same-color squares and elongated pieces. Diameter is the outer face outline, not a fitted Hough circle.",
+        "operations": [
+          {
+            "id": "input_resize",
+            "kind": "resize",
+            "params": {
+              "max_side": 480
+            }
+          },
+          {
+            "id": "color_mask",
+            "kind": "hsv_mask",
+            "params": {
+              "hue_low": 170,
+              "hue_high": 12,
+              "saturation_low": 100,
+              "saturation_high": 255,
+              "value_low": 60,
+              "value_high": 255
+            }
+          },
+          {
+            "id": "smooth_color_mask",
+            "kind": "median_blur",
+            "params": {
+              "kernel": 3
+            }
+          },
+          {
+            "id": "round_faces",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.004,
+              "max_area": 0.04,
+              "min_circularity": 0.84,
+              "min_solidity": 0.93,
+              "min_aspect": 1.0,
+              "max_aspect": 1.2,
+              "reject_border": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "brightness",
+        "name": "Brightness-only comparison",
+        "parent_id": "main",
+        "fork_after": "input_resize",
+        "rationale": "A dark-object threshold discards the hue information. Inspect the other-colored circle in the negative image to see why color matters.",
+        "operations": [
+          {
+            "id": "gray",
+            "kind": "grayscale",
+            "params": {}
+          },
+          {
+            "id": "dark_mask",
+            "kind": "range_mask",
+            "params": {
+              "low": 0,
+              "high": 160
+            }
+          },
+          {
+            "id": "smooth_dark_mask",
+            "kind": "median_blur",
+            "params": {
+              "kernel": 3
+            }
+          },
+          {
+            "id": "dark_round_faces",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.004,
+              "max_area": 0.04,
+              "min_circularity": 0.84,
+              "min_solidity": 0.93,
+              "min_aspect": 1.0,
+              "max_aspect": 1.2,
+              "reject_border": true
+            }
+          }
+        ]
+      }
+    ],
+    "recommended_timeline_id": "main",
+    "suggested_measurements": [
+      "length",
+      "width",
+      "color",
+      "center"
+    ],
+    "expected": {
+      "recommended_timeline_id": "main",
+      "counts": [
+        2,
+        2,
+        0
+      ],
+      "min_iou": 0.5,
+      "max_false_positives": 0
+    },
+    "generation": {
+      "script": "scripts/build_object_examples_a.py",
+      "deterministic": true,
+      "image_size": [
+        480,
+        320
+      ],
+      "labels": "Exact bounding boxes of rendered object masks",
+      "evidence": "Teaching/development fixtures; no held-out accuracy claim"
+    }
+  },
+  {
+    "id": "a-blue-caps",
+    "title": "Blue bottle-cap faces · 2D",
+    "category": "Object tests · 2D",
+    "collection": "object-tests",
+    "description": "Find the two blue round caps; ignore blue squares, elongated blue pieces and a red circle.",
+    "context": "Generated flat 2D teaching images with exact rendered-mask boxes; not natural-image reliability evidence. Cap highlights and radial grooves remain inside the blue hue range. The contour reports an outer face footprint; color plus roundness is not a general cap classifier.",
+    "source": "",
+    "credit": "Generated deterministic 2D teaching illustration · exact analytic-mask labels",
+    "workbench_only": true,
+    "filename": "object-tests/a-blue-caps-base.png",
+    "path": "/examples/object-tests/a-blue-caps-base.png",
+    "boxes": [
+      {
+        "x": 0.18958333333333333,
+        "y": 0.209375,
+        "width": 0.13125,
+        "height": 0.196875
+      },
+      {
+        "x": 0.6729166666666667,
+        "y": 0.621875,
+        "width": 0.11458333333333333,
+        "height": 0.171875
+      }
+    ],
+    "labeled": true,
+    "samples": [
+      {
+        "id": "a-blue-caps-base",
+        "name": "Two objects with a distractor",
+        "filename": "object-tests/a-blue-caps-base.png",
+        "path": "/examples/object-tests/a-blue-caps-base.png",
+        "boxes": [
+          {
+            "x": 0.18958333333333333,
+            "y": 0.209375,
+            "width": 0.13125,
+            "height": 0.196875
+          },
+          {
+            "x": 0.6729166666666667,
+            "y": 0.621875,
+            "width": 0.11458333333333333,
+            "height": 0.171875
+          }
+        ],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 2,
+        "expected": {
+          "count": 2,
+          "min_iou": 0.5,
+          "max_false_positives": 0
+        },
+        "source_sha256": "248905ffa3d27a97fbeafc2a5564df38b8907b72b47f7ef45e6537756a0c2e6b",
+        "target_pixel_areas": [
+          3001,
+          2329
+        ],
+        "teaching_check": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "mean_matched_iou": 0.9687578735197782,
+          "min_matched_iou": 0.9375157470395556,
+          "material_area_exact": null,
+          "branch_counts": {
+            "main": 2,
+            "brightness": 2
+          }
+        }
+      },
+      {
+        "id": "a-blue-caps-variation",
+        "name": "Moved, rotated and dimmed",
+        "filename": "object-tests/a-blue-caps-variation.png",
+        "path": "/examples/object-tests/a-blue-caps-variation.png",
+        "boxes": [
+          {
+            "x": 0.19791666666666666,
+            "y": 0.615625,
+            "width": 0.12291666666666666,
+            "height": 0.184375
+          },
+          {
+            "x": 0.64375,
+            "y": 0.19375,
+            "width": 0.13541666666666666,
+            "height": 0.203125
+          }
+        ],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 2,
+        "expected": {
+          "count": 2,
+          "min_iou": 0.5,
+          "max_false_positives": 0
+        },
+        "source_sha256": "11a59a953738335bef31fd83a09f75e248fbf45821fc0c7484898876966ba0ae",
+        "target_pixel_areas": [
+          2657,
+          3245
+        ],
+        "teaching_check": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "mean_matched_iou": 0.9999999999999998,
+          "min_matched_iou": 0.9999999999999992,
+          "material_area_exact": null,
+          "branch_counts": {
+            "main": 2,
+            "brightness": 2
+          }
+        }
+      },
+      {
+        "id": "a-blue-caps-negative",
+        "name": "Distractors only",
+        "filename": "object-tests/a-blue-caps-negative.png",
+        "path": "/examples/object-tests/a-blue-caps-negative.png",
+        "boxes": [],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 0,
+        "expected": {
+          "count": 0,
+          "min_iou": 0.5,
+          "max_false_positives": 0
+        },
+        "source_sha256": "4802826728a6351f084725cf4eea34cc4b416516762ec5b31509f55408ad3702",
+        "target_pixel_areas": [],
+        "teaching_check": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "mean_matched_iou": null,
+          "min_matched_iou": null,
+          "material_area_exact": null,
+          "branch_counts": {
+            "main": 0,
+            "brightness": 1
+          }
+        }
+      }
+    ],
+    "pipelines": [
+      {
+        "id": "main",
+        "name": "Color and round outline",
+        "parent_id": null,
+        "fork_after": null,
+        "rationale": "Select the object color, smooth single-pixel raster irregularities, then reject same-color squares and elongated pieces. Diameter is the outer face outline, not a fitted Hough circle.",
+        "operations": [
+          {
+            "id": "input_resize",
+            "kind": "resize",
+            "params": {
+              "max_side": 480
+            }
+          },
+          {
+            "id": "color_mask",
+            "kind": "hsv_mask",
+            "params": {
+              "hue_low": 98,
+              "hue_high": 124,
+              "saturation_low": 100,
+              "saturation_high": 255,
+              "value_low": 60,
+              "value_high": 255
+            }
+          },
+          {
+            "id": "smooth_color_mask",
+            "kind": "median_blur",
+            "params": {
+              "kernel": 3
+            }
+          },
+          {
+            "id": "round_faces",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.004,
+              "max_area": 0.04,
+              "min_circularity": 0.84,
+              "min_solidity": 0.93,
+              "min_aspect": 1.0,
+              "max_aspect": 1.2,
+              "reject_border": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "brightness",
+        "name": "Brightness-only comparison",
+        "parent_id": "main",
+        "fork_after": "input_resize",
+        "rationale": "A dark-object threshold discards the hue information. Inspect the other-colored circle in the negative image to see why color matters.",
+        "operations": [
+          {
+            "id": "gray",
+            "kind": "grayscale",
+            "params": {}
+          },
+          {
+            "id": "dark_mask",
+            "kind": "range_mask",
+            "params": {
+              "low": 0,
+              "high": 160
+            }
+          },
+          {
+            "id": "smooth_dark_mask",
+            "kind": "median_blur",
+            "params": {
+              "kernel": 3
+            }
+          },
+          {
+            "id": "dark_round_faces",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.004,
+              "max_area": 0.04,
+              "min_circularity": 0.84,
+              "min_solidity": 0.93,
+              "min_aspect": 1.0,
+              "max_aspect": 1.2,
+              "reject_border": true
+            }
+          }
+        ]
+      }
+    ],
+    "recommended_timeline_id": "main",
+    "suggested_measurements": [
+      "length",
+      "width",
+      "color",
+      "area"
+    ],
+    "expected": {
+      "recommended_timeline_id": "main",
+      "counts": [
+        2,
+        2,
+        0
+      ],
+      "min_iou": 0.5,
+      "max_false_positives": 0
+    },
+    "generation": {
+      "script": "scripts/build_object_examples_a.py",
+      "deterministic": true,
+      "image_size": [
+        480,
+        320
+      ],
+      "labels": "Exact bounding boxes of rendered object masks",
+      "evidence": "Teaching/development fixtures; no held-out accuracy claim"
+    }
+  },
+  {
+    "id": "a-yellow-pencils",
+    "title": "Yellow pencils: full and painted length · 2D",
+    "category": "Object tests · 2D",
+    "collection": "object-tests",
+    "description": "Find the two complete pencils, including their erasers and points; ignore short yellow objects.",
+    "context": "Generated flat 2D teaching images with exact rendered-mask boxes; not natural-image reliability evidence. Compare whole-silhouette length against the shorter yellow painted-body branch. The plain-background Otsu path includes eraser, ferrule, wood and graphite.",
+    "source": "",
+    "credit": "Generated deterministic 2D teaching illustration · exact analytic-mask labels",
+    "workbench_only": true,
+    "filename": "object-tests/a-yellow-pencils-base.png",
+    "path": "/examples/object-tests/a-yellow-pencils-base.png",
+    "boxes": [
+      {
+        "x": 0.07708333333333334,
+        "y": 0.275,
+        "width": 0.3458333333333333,
+        "height": 0.065625
+      },
+      {
+        "x": 0.5729166666666666,
+        "y": 0.65,
+        "width": 0.30416666666666664,
+        "height": 0.10625
+      }
+    ],
+    "labeled": true,
+    "samples": [
+      {
+        "id": "a-yellow-pencils-base",
+        "name": "Two objects with a distractor",
+        "filename": "object-tests/a-yellow-pencils-base.png",
+        "path": "/examples/object-tests/a-yellow-pencils-base.png",
+        "boxes": [
+          {
+            "x": 0.07708333333333334,
+            "y": 0.275,
+            "width": 0.3458333333333333,
+            "height": 0.065625
+          },
+          {
+            "x": 0.5729166666666666,
+            "y": 0.65,
+            "width": 0.30416666666666664,
+            "height": 0.10625
+          }
+        ],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 2,
+        "expected": {
+          "count": 2,
+          "min_iou": 0.5,
+          "max_false_positives": 0
+        },
+        "source_sha256": "adeb8a90f46ae8831a49ccf9e3f8f3992116ce2d58cabadec866ac536f6cef06",
+        "target_pixel_areas": [
+          3256,
+          2519
+        ],
+        "teaching_check": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "mean_matched_iou": 0.9999999999999992,
+          "min_matched_iou": 0.9999999999999991,
+          "material_area_exact": null,
+          "branch_counts": {
+            "main": 2,
+            "paint": 2
+          }
+        }
+      },
+      {
+        "id": "a-yellow-pencils-variation",
+        "name": "Moved, rotated and dimmed",
+        "filename": "object-tests/a-yellow-pencils-variation.png",
+        "path": "/examples/object-tests/a-yellow-pencils-variation.png",
+        "boxes": [
+          {
+            "x": 0.09583333333333334,
+            "y": 0.61875,
+            "width": 0.3104166666666667,
+            "height": 0.20625
+          },
+          {
+            "x": 0.5333333333333333,
+            "y": 0.15625,
+            "width": 0.3375,
+            "height": 0.24375
+          }
+        ],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 2,
+        "expected": {
+          "count": 2,
+          "min_iou": 0.5,
+          "max_false_positives": 0
+        },
+        "source_sha256": "9198ea897d14369c6319bc0999c0b4e9927eb9458c2b0964624df81dfabce138",
+        "target_pixel_areas": [
+          2879,
+          3518
+        ],
+        "teaching_check": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "mean_matched_iou": 0.9999999999999996,
+          "min_matched_iou": 0.9999999999999991,
+          "material_area_exact": null,
+          "branch_counts": {
+            "main": 2,
+            "paint": 2
+          }
+        }
+      },
+      {
+        "id": "a-yellow-pencils-negative",
+        "name": "Distractors only",
+        "filename": "object-tests/a-yellow-pencils-negative.png",
+        "path": "/examples/object-tests/a-yellow-pencils-negative.png",
+        "boxes": [],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 0,
+        "expected": {
+          "count": 0,
+          "min_iou": 0.5,
+          "max_false_positives": 0
+        },
+        "source_sha256": "a5b30ace6ecfdd4d2da457948b7c7ac8ed62ea8d35b44be194f614a901c56672",
+        "target_pixel_areas": [],
+        "teaching_check": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "mean_matched_iou": null,
+          "min_matched_iou": null,
+          "material_area_exact": null,
+          "branch_counts": {
+            "main": 0,
+            "paint": 0
+          }
+        }
+      }
+    ],
+    "pipelines": [
+      {
+        "id": "main",
+        "name": "Complete silhouette length",
+        "parent_id": null,
+        "fork_after": null,
+        "rationale": "Separate the silhouette from the plain background with Otsu, then require an elongated shape. Rotated rectangle measurements include the full tip or bolt head.",
+        "operations": [
+          {
+            "id": "input_resize",
+            "kind": "resize",
+            "params": {
+              "max_side": 480
+            }
+          },
+          {
+            "id": "gray",
+            "kind": "grayscale",
+            "params": {}
+          },
+          {
+            "id": "light_mask",
+            "kind": "otsu",
+            "params": {}
+          },
+          {
+            "id": "body_mask",
+            "kind": "invert",
+            "params": {}
+          },
+          {
+            "id": "long_objects",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.003,
+              "max_area": 0.08,
+              "min_circularity": 0.0,
+              "min_solidity": 0.88,
+              "min_aspect": 5.0,
+              "max_aspect": 15.0,
+              "reject_border": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "paint",
+        "name": "Yellow painted section",
+        "parent_id": "main",
+        "fork_after": "input_resize",
+        "rationale": "Compare the painted-body length with the complete pencil silhouette. The wood point and eraser are deliberately excluded here.",
+        "operations": [
+          {
+            "id": "yellow_mask",
+            "kind": "hsv_mask",
+            "params": {
+              "hue_low": 18,
+              "hue_high": 38,
+              "saturation_low": 100,
+              "saturation_high": 255,
+              "value_low": 60,
+              "value_high": 255
+            }
+          },
+          {
+            "id": "painted_bodies",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.003,
+              "max_area": 0.08,
+              "min_circularity": 0.0,
+              "min_solidity": 0.88,
+              "min_aspect": 5.0,
+              "max_aspect": 15.0,
+              "reject_border": true
+            }
+          }
+        ]
+      }
+    ],
+    "recommended_timeline_id": "main",
+    "suggested_measurements": [
+      "length",
+      "width",
+      "angle",
+      "color"
+    ],
+    "expected": {
+      "recommended_timeline_id": "main",
+      "counts": [
+        2,
+        2,
+        0
+      ],
+      "min_iou": 0.5,
+      "max_false_positives": 0
+    },
+    "generation": {
+      "script": "scripts/build_object_examples_a.py",
+      "deterministic": true,
+      "image_size": [
+        480,
+        320
+      ],
+      "labels": "Exact bounding boxes of rendered object masks",
+      "evidence": "Teaching/development fixtures; no held-out accuracy claim"
+    }
+  },
+  {
+    "id": "a-warning-triangles",
+    "title": "Red warning triangles with open centers · 2D",
+    "category": "Object tests · 2D",
+    "collection": "object-tests",
+    "description": "Find the two outlined warning signs; reject filled red triangles, disks and blocks.",
+    "context": "Generated flat 2D teaching images with exact rendered-mask boxes; not natural-image reliability evidence. The red border encloses a white sign interior with an exclamation mark. Hole confirmation rejects filled shapes here; it does not prove that every accepted outline has exactly three corners. Outer area includes the interior.",
+    "source": "",
+    "credit": "Generated deterministic 2D teaching illustration · exact analytic-mask labels",
+    "workbench_only": true,
+    "filename": "object-tests/a-warning-triangles-base.png",
+    "path": "/examples/object-tests/a-warning-triangles-base.png",
+    "boxes": [
+      {
+        "x": 0.1625,
+        "y": 0.171875,
+        "width": 0.18541666666666667,
+        "height": 0.246875
+      },
+      {
+        "x": 0.6416666666666667,
+        "y": 0.590625,
+        "width": 0.1625,
+        "height": 0.228125
+      }
+    ],
+    "labeled": true,
+    "samples": [
+      {
+        "id": "a-warning-triangles-base",
+        "name": "Two objects with a distractor",
+        "filename": "object-tests/a-warning-triangles-base.png",
+        "path": "/examples/object-tests/a-warning-triangles-base.png",
+        "boxes": [
+          {
+            "x": 0.1625,
+            "y": 0.171875,
+            "width": 0.18541666666666667,
+            "height": 0.246875
+          },
+          {
+            "x": 0.6416666666666667,
+            "y": 0.590625,
+            "width": 0.1625,
+            "height": 0.228125
+          }
+        ],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 2,
+        "expected": {
+          "count": 2,
+          "min_iou": 0.5,
+          "max_false_positives": 0
+        },
+        "source_sha256": "0bf8bd537f00f57f52f8f3282945657b1c546498106bee81ccb7786b56e943d4",
+        "target_pixel_areas": [
+          3555,
+          2756
+        ],
+        "teaching_check": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "mean_matched_iou": 0.9999999999999998,
+          "min_matched_iou": 0.9999999999999997,
+          "material_area_exact": null,
+          "branch_counts": {
+            "main": 3,
+            "holes": 2,
+            "confirmed": 2
+          }
+        }
+      },
+      {
+        "id": "a-warning-triangles-variation",
+        "name": "Moved, rotated and dimmed",
+        "filename": "object-tests/a-warning-triangles-variation.png",
+        "path": "/examples/object-tests/a-warning-triangles-variation.png",
+        "boxes": [
+          {
+            "x": 0.20208333333333334,
+            "y": 0.5875,
+            "width": 0.1625,
+            "height": 0.265625
+          },
+          {
+            "x": 0.59375,
+            "y": 0.165625,
+            "width": 0.17708333333333334,
+            "height": 0.290625
+          }
+        ],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 2,
+        "expected": {
+          "count": 2,
+          "min_iou": 0.5,
+          "max_false_positives": 0
+        },
+        "source_sha256": "4840b3120a2882afa7c28500e0d04e6cae33f2e9c3040749bb0fe2268bde5721",
+        "target_pixel_areas": [
+          3142,
+          3842
+        ],
+        "teaching_check": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "mean_matched_iou": 1.0000000000000002,
+          "min_matched_iou": 1.0000000000000002,
+          "material_area_exact": null,
+          "branch_counts": {
+            "main": 3,
+            "holes": 2,
+            "confirmed": 2
+          }
+        }
+      },
+      {
+        "id": "a-warning-triangles-negative",
+        "name": "Distractors only",
+        "filename": "object-tests/a-warning-triangles-negative.png",
+        "path": "/examples/object-tests/a-warning-triangles-negative.png",
+        "boxes": [],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 0,
+        "expected": {
+          "count": 0,
+          "min_iou": 0.5,
+          "max_false_positives": 0
+        },
+        "source_sha256": "ac6afc2c95bed9954b978e17c3b20e0d0f8bc8572b5b9943a35d05172b40de51",
+        "target_pixel_areas": [],
+        "teaching_check": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "mean_matched_iou": null,
+          "min_matched_iou": null,
+          "material_area_exact": null,
+          "branch_counts": {
+            "main": 3,
+            "holes": 0,
+            "confirmed": 0
+          }
+        }
+      }
+    ],
+    "pipelines": [
+      {
+        "id": "main",
+        "name": "Outer object dimensions",
+        "parent_id": null,
+        "fork_after": null,
+        "rationale": "Select the visible material and measure it. Solid same-color distractors can also survive this first detector.",
+        "operations": [
+          {
+            "id": "input_resize",
+            "kind": "resize",
+            "params": {
+              "max_side": 480
+            }
+          },
+          {
+            "id": "object_mask",
+            "kind": "hsv_mask",
+            "params": {
+              "hue_low": 170,
+              "hue_high": 12,
+              "saturation_low": 100,
+              "saturation_high": 255,
+              "value_low": 60,
+              "value_high": 255
+            }
+          },
+          {
+            "id": "primary",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.003,
+              "max_area": 0.1,
+              "min_circularity": 0.0,
+              "min_solidity": 0.85,
+              "min_aspect": 1.0,
+              "max_aspect": 5.0,
+              "reject_border": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "holes",
+        "name": "Enclosed openings",
+        "parent_id": "main",
+        "fork_after": "object_mask",
+        "rationale": "Invert the mask, then reject the border-connected outside background. Only enclosed openings remain; an open ring has no enclosed opening.",
+        "operations": [
+          {
+            "id": "inside_background",
+            "kind": "invert",
+            "params": {}
+          },
+          {
+            "id": "hole_regions",
+            "kind": "cimg_components",
+            "params": {
+              "connectivity": "8",
+              "min_pixels": 100,
+              "max_pixels": 10000,
+              "reject_border": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "confirmed",
+        "name": "Objects with enclosed openings",
+        "parent_id": "main",
+        "fork_after": "primary",
+        "rationale": "Require a matching interior opening. Keep the original object bounds and material measurements. This tests the illustrated feature, not a learned object category.",
+        "operations": [
+          {
+            "id": "agreement",
+            "kind": "confirm",
+            "params": {
+              "pipeline_ids": "holes",
+              "min_support": 1,
+              "iou": 0.08,
+              "match_text": false
+            }
+          }
+        ]
+      }
+    ],
+    "recommended_timeline_id": "confirmed",
+    "suggested_measurements": [
+      "length",
+      "width",
+      "area",
+      "center"
+    ],
+    "expected": {
+      "recommended_timeline_id": "confirmed",
+      "counts": [
+        2,
+        2,
+        0
+      ],
+      "min_iou": 0.5,
+      "max_false_positives": 0
+    },
+    "generation": {
+      "script": "scripts/build_object_examples_a.py",
+      "deterministic": true,
+      "image_size": [
+        480,
+        320
+      ],
+      "labels": "Exact bounding boxes of rendered object masks",
+      "evidence": "Teaching/development fixtures; no held-out accuracy claim"
+    }
+  },
+  {
+    "id": "a-gasket-rings",
+    "title": "Black gasket rings and open gaps · 2D",
+    "category": "Object tests · 2D",
+    "collection": "object-tests",
+    "description": "Find the two closed black gasket rings; ignore solid pieces and the open C-shaped gasket.",
+    "context": "Generated flat 2D teaching images with exact rendered-mask boxes; not natural-image reliability evidence. The selected path preserves material pixels and excludes openings from area. Inverting the mask demonstrates why an open gap connects the interior to the outside background.",
+    "source": "",
+    "credit": "Generated deterministic 2D teaching illustration · exact analytic-mask labels",
+    "workbench_only": true,
+    "filename": "object-tests/a-gasket-rings-base.png",
+    "path": "/examples/object-tests/a-gasket-rings-base.png",
+    "boxes": [
+      {
+        "x": 0.17291666666666666,
+        "y": 0.215625,
+        "width": 0.16458333333333333,
+        "height": 0.184375
+      },
+      {
+        "x": 0.6583333333333333,
+        "y": 0.625,
+        "width": 0.14375,
+        "height": 0.165625
+      }
+    ],
+    "labeled": true,
+    "samples": [
+      {
+        "id": "a-gasket-rings-base",
+        "name": "Two objects with a distractor",
+        "filename": "object-tests/a-gasket-rings-base.png",
+        "path": "/examples/object-tests/a-gasket-rings-base.png",
+        "boxes": [
+          {
+            "x": 0.17291666666666666,
+            "y": 0.215625,
+            "width": 0.16458333333333333,
+            "height": 0.184375
+          },
+          {
+            "x": 0.6583333333333333,
+            "y": 0.625,
+            "width": 0.14375,
+            "height": 0.165625
+          }
+        ],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 2,
+        "expected": {
+          "count": 2,
+          "min_iou": 0.5,
+          "max_false_positives": 0
+        },
+        "source_sha256": "ddbbbf0b46d6ca214a705281e826d697f566fc6766e1445d986a2100ec975dc3",
+        "target_pixel_areas": [
+          2350,
+          1820
+        ],
+        "teaching_check": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "mean_matched_iou": 1.0,
+          "min_matched_iou": 0.9999999999999994,
+          "material_area_exact": true,
+          "branch_counts": {
+            "main": 3,
+            "holes": 2,
+            "confirmed": 2
+          }
+        }
+      },
+      {
+        "id": "a-gasket-rings-variation",
+        "name": "Moved, rotated and dimmed",
+        "filename": "object-tests/a-gasket-rings-variation.png",
+        "path": "/examples/object-tests/a-gasket-rings-variation.png",
+        "boxes": [
+          {
+            "x": 0.18333333333333332,
+            "y": 0.615625,
+            "width": 0.15208333333333332,
+            "height": 0.184375
+          },
+          {
+            "x": 0.6270833333333333,
+            "y": 0.19375,
+            "width": 0.16875,
+            "height": 0.20625
+          }
+        ],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 2,
+        "expected": {
+          "count": 2,
+          "min_iou": 0.5,
+          "max_false_positives": 0
+        },
+        "source_sha256": "196eba02ed5f7adc9b509516018a4a6ae7793af3622bd0d804b378ac2f13d2ae",
+        "target_pixel_areas": [
+          2077,
+          2546
+        ],
+        "teaching_check": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "mean_matched_iou": 1.0000000000000009,
+          "min_matched_iou": 1.0000000000000007,
+          "material_area_exact": true,
+          "branch_counts": {
+            "main": 3,
+            "holes": 2,
+            "confirmed": 2
+          }
+        }
+      },
+      {
+        "id": "a-gasket-rings-negative",
+        "name": "Distractors only",
+        "filename": "object-tests/a-gasket-rings-negative.png",
+        "path": "/examples/object-tests/a-gasket-rings-negative.png",
+        "boxes": [],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 0,
+        "expected": {
+          "count": 0,
+          "min_iou": 0.5,
+          "max_false_positives": 0
+        },
+        "source_sha256": "7bf9525cecfb18a00ee0cdebf3ee2000497f048cf8303e728e87ba3caee23195",
+        "target_pixel_areas": [],
+        "teaching_check": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "mean_matched_iou": null,
+          "min_matched_iou": null,
+          "material_area_exact": true,
+          "branch_counts": {
+            "main": 3,
+            "holes": 0,
+            "confirmed": 0
+          }
+        }
+      }
+    ],
+    "pipelines": [
+      {
+        "id": "main",
+        "name": "Material pixels",
+        "parent_id": null,
+        "fork_after": null,
+        "rationale": "Select the visible material and measure it. Solid same-color distractors can also survive this first detector.",
+        "operations": [
+          {
+            "id": "input_resize",
+            "kind": "resize",
+            "params": {
+              "max_side": 480
+            }
+          },
+          {
+            "id": "gray",
+            "kind": "grayscale",
+            "params": {}
+          },
+          {
+            "id": "object_mask",
+            "kind": "range_mask",
+            "params": {
+              "low": 0,
+              "high": 70
+            }
+          },
+          {
+            "id": "primary",
+            "kind": "cimg_components",
+            "params": {
+              "connectivity": "8",
+              "min_pixels": 300,
+              "max_pixels": 15000,
+              "reject_border": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "holes",
+        "name": "Enclosed openings",
+        "parent_id": "main",
+        "fork_after": "object_mask",
+        "rationale": "Invert the mask, then reject the border-connected outside background. Only enclosed openings remain; an open ring has no enclosed opening.",
+        "operations": [
+          {
+            "id": "inside_background",
+            "kind": "invert",
+            "params": {}
+          },
+          {
+            "id": "hole_regions",
+            "kind": "cimg_components",
+            "params": {
+              "connectivity": "8",
+              "min_pixels": 100,
+              "max_pixels": 10000,
+              "reject_border": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "confirmed",
+        "name": "Objects with enclosed openings",
+        "parent_id": "main",
+        "fork_after": "primary",
+        "rationale": "Require a matching interior opening. Keep the original object bounds and material measurements. This tests the illustrated feature, not a learned object category.",
+        "operations": [
+          {
+            "id": "agreement",
+            "kind": "confirm",
+            "params": {
+              "pipeline_ids": "holes",
+              "min_support": 1,
+              "iou": 0.08,
+              "match_text": false
+            }
+          }
+        ]
+      }
+    ],
+    "recommended_timeline_id": "confirmed",
+    "suggested_measurements": [
+      "length",
+      "width",
+      "area",
+      "center"
+    ],
+    "expected": {
+      "recommended_timeline_id": "confirmed",
+      "counts": [
+        2,
+        2,
+        0
+      ],
+      "min_iou": 0.5,
+      "max_false_positives": 0
+    },
+    "generation": {
+      "script": "scripts/build_object_examples_a.py",
+      "deterministic": true,
+      "image_size": [
+        480,
+        320
+      ],
+      "labels": "Exact bounding boxes of rendered object masks",
+      "evidence": "Teaching/development fixtures; no held-out accuracy claim"
+    }
+  },
+  {
+    "id": "a-orange-packages",
+    "title": "Orange rectangular packages · 2D",
+    "category": "Object tests · 2D",
+    "collection": "object-tests",
+    "description": "Find the two orange packages with pale shipping labels; reject circles, long strips and blue boxes.",
+    "context": "Generated flat 2D teaching images with exact rendered-mask boxes; not natural-image reliability evidence. Outer contours include the shipping-label hole when measuring package footprint. Compare the connected-region alternative to see how visible orange material area differs.",
+    "source": "",
+    "credit": "Generated deterministic 2D teaching illustration · exact analytic-mask labels",
+    "workbench_only": true,
+    "filename": "object-tests/a-orange-packages-base.png",
+    "path": "/examples/object-tests/a-orange-packages-base.png",
+    "boxes": [
+      {
+        "x": 0.15,
+        "y": 0.20625,
+        "width": 0.21041666666666667,
+        "height": 0.203125
+      },
+      {
+        "x": 0.63125,
+        "y": 0.603125,
+        "width": 0.19791666666666666,
+        "height": 0.209375
+      }
+    ],
+    "labeled": true,
+    "samples": [
+      {
+        "id": "a-orange-packages-base",
+        "name": "Two objects with a distractor",
+        "filename": "object-tests/a-orange-packages-base.png",
+        "path": "/examples/object-tests/a-orange-packages-base.png",
+        "boxes": [
+          {
+            "x": 0.15,
+            "y": 0.20625,
+            "width": 0.21041666666666667,
+            "height": 0.203125
+          },
+          {
+            "x": 0.63125,
+            "y": 0.603125,
+            "width": 0.19791666666666666,
+            "height": 0.209375
+          }
+        ],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 2,
+        "expected": {
+          "count": 2,
+          "min_iou": 0.5,
+          "max_false_positives": 0
+        },
+        "source_sha256": "1f6523b334bbe27432d28d92e76f37f79082768ded1064a27fc91b13301f73a2",
+        "target_pixel_areas": [
+          6565,
+          5087
+        ],
+        "teaching_check": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "mean_matched_iou": 0.9999999999999998,
+          "min_matched_iou": 0.9999999999999997,
+          "material_area_exact": null,
+          "branch_counts": {
+            "main": 2,
+            "material": 3
+          }
+        }
+      },
+      {
+        "id": "a-orange-packages-variation",
+        "name": "Moved, rotated and dimmed",
+        "filename": "object-tests/a-orange-packages-variation.png",
+        "path": "/examples/object-tests/a-orange-packages-variation.png",
+        "boxes": [
+          {
+            "x": 0.14375,
+            "y": 0.565625,
+            "width": 0.23125,
+            "height": 0.284375
+          },
+          {
+            "x": 0.5833333333333334,
+            "y": 0.134375,
+            "width": 0.25625,
+            "height": 0.321875
+          }
+        ],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 2,
+        "expected": {
+          "count": 2,
+          "min_iou": 0.5,
+          "max_false_positives": 0
+        },
+        "source_sha256": "7f9d9507e8d96e50cd77a85d5e044ad24d21fe8dee3cf7d9f19501012cfae501",
+        "target_pixel_areas": [
+          5801,
+          7101
+        ],
+        "teaching_check": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "mean_matched_iou": 1.0000000000000002,
+          "min_matched_iou": 1.0,
+          "material_area_exact": null,
+          "branch_counts": {
+            "main": 2,
+            "material": 3
+          }
+        }
+      },
+      {
+        "id": "a-orange-packages-negative",
+        "name": "Distractors only",
+        "filename": "object-tests/a-orange-packages-negative.png",
+        "path": "/examples/object-tests/a-orange-packages-negative.png",
+        "boxes": [],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 0,
+        "expected": {
+          "count": 0,
+          "min_iou": 0.5,
+          "max_false_positives": 0
+        },
+        "source_sha256": "de66eca1ff8a6601951c692ab4e955e63eb798180aa5636535533689b0702f26",
+        "target_pixel_areas": [],
+        "teaching_check": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "mean_matched_iou": null,
+          "min_matched_iou": null,
+          "material_area_exact": null,
+          "branch_counts": {
+            "main": 0,
+            "material": 2
+          }
+        }
+      }
+    ],
+    "pipelines": [
+      {
+        "id": "main",
+        "name": "Package outer rectangle",
+        "parent_id": null,
+        "fork_after": null,
+        "rationale": "Measure the complete outer package footprint, including the printed label. Aspect filtering rejects disks and long orange strips.",
+        "operations": [
+          {
+            "id": "input_resize",
+            "kind": "resize",
+            "params": {
+              "max_side": 480
+            }
+          },
+          {
+            "id": "orange_mask",
+            "kind": "hsv_mask",
+            "params": {
+              "hue_low": 6,
+              "hue_high": 25,
+              "saturation_low": 110,
+              "saturation_high": 255,
+              "value_low": 60,
+              "value_high": 255
+            }
+          },
+          {
+            "id": "outer_boxes",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.015,
+              "max_area": 0.1,
+              "min_circularity": 0.0,
+              "min_solidity": 0.96,
+              "min_aspect": 1.3,
+              "max_aspect": 2.5,
+              "reject_border": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "material",
+        "name": "Visible orange material",
+        "parent_id": "main",
+        "fork_after": "orange_mask",
+        "rationale": "Connected pixels exclude the pale label from area. Compare this painted-material area with the outer rectangular area.",
+        "operations": [
+          {
+            "id": "painted_regions",
+            "kind": "cimg_components",
+            "params": {
+              "connectivity": "8",
+              "min_pixels": 400,
+              "max_pixels": 15000,
+              "reject_border": true
+            }
+          }
+        ]
+      }
+    ],
+    "recommended_timeline_id": "main",
+    "suggested_measurements": [
+      "length",
+      "width",
+      "area",
+      "angle",
+      "color"
+    ],
+    "expected": {
+      "recommended_timeline_id": "main",
+      "counts": [
+        2,
+        2,
+        0
+      ],
+      "min_iou": 0.5,
+      "max_false_positives": 0
+    },
+    "generation": {
+      "script": "scripts/build_object_examples_a.py",
+      "deterministic": true,
+      "image_size": [
+        480,
+        320
+      ],
+      "labels": "Exact bounding boxes of rendered object masks",
+      "evidence": "Teaching/development fixtures; no held-out accuracy claim"
+    }
+  }
+]

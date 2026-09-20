@@ -1,0 +1,1919 @@
+[
+  {
+    "id": "b-leaves",
+    "title": "Green leaves · 2D",
+    "category": "Object tests · 2D",
+    "collection": "object-tests",
+    "filename": "object-tests/b-leaves-base.png",
+    "path": "/examples/object-tests/b-leaves-base.png",
+    "boxes": [
+      {
+        "x": 0.11458333333333333,
+        "y": 0.19921875,
+        "width": 0.1484375,
+        "height": 0.12109375
+      },
+      {
+        "x": 0.4973958333333333,
+        "y": 0.23828125,
+        "width": 0.15364583333333334,
+        "height": 0.14453125
+      },
+      {
+        "x": 0.3151041666666667,
+        "y": 0.67578125,
+        "width": 0.18489583333333334,
+        "height": 0.12109375
+      }
+    ],
+    "labeled": true,
+    "source": "",
+    "credit": "Generated analytic teaching images · known geometry",
+    "description": "Find the three green pointed leaves. Ignore the round green token and brown/yellow leaves.",
+    "context": "Generated analytic 2D teaching images with constructed labels. All three images are development/training examples; these checks do not establish reliability on camera images, unseen objects or physical measurements.",
+    "workbench_only": true,
+    "samples": [
+      {
+        "id": "b-leaves-base",
+        "name": "Green leaves · base",
+        "filename": "object-tests/b-leaves-base.png",
+        "path": "/examples/object-tests/b-leaves-base.png",
+        "boxes": [
+          {
+            "x": 0.11458333333333333,
+            "y": 0.19921875,
+            "width": 0.1484375,
+            "height": 0.12109375
+          },
+          {
+            "x": 0.4973958333333333,
+            "y": 0.23828125,
+            "width": 0.15364583333333334,
+            "height": 0.14453125
+          },
+          {
+            "x": 0.3151041666666667,
+            "y": 0.67578125,
+            "width": 0.18489583333333334,
+            "height": 0.12109375
+          }
+        ],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 3,
+        "variant": "base"
+      },
+      {
+        "id": "b-leaves-variation",
+        "name": "Green leaves · variation",
+        "filename": "object-tests/b-leaves-variation.png",
+        "path": "/examples/object-tests/b-leaves-variation.png",
+        "boxes": [
+          {
+            "x": 0.11979166666666667,
+            "y": 0.65625,
+            "width": 0.15885416666666666,
+            "height": 0.12890625
+          },
+          {
+            "x": 0.5026041666666666,
+            "y": 0.18359375,
+            "width": 0.1484375,
+            "height": 0.19140625
+          },
+          {
+            "x": 0.7005208333333334,
+            "y": 0.6328125,
+            "width": 0.08072916666666667,
+            "height": 0.22265625
+          }
+        ],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 3,
+        "variant": "variation"
+      },
+      {
+        "id": "b-leaves-negative",
+        "name": "Green leaves · negative",
+        "filename": "object-tests/b-leaves-negative.png",
+        "path": "/examples/object-tests/b-leaves-negative.png",
+        "boxes": [],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 0,
+        "variant": "negative"
+      }
+    ],
+    "pipelines": [
+      {
+        "id": "main",
+        "name": "Green hue + elongated shape",
+        "parent_id": null,
+        "fork_after": null,
+        "rationale": "Green hue excludes brown/yellow leaves; elongation excludes the round green token.",
+        "operations": [
+          {
+            "id": "start",
+            "kind": "resize",
+            "params": {
+              "max_side": 384
+            }
+          },
+          {
+            "id": "green",
+            "kind": "hsv_mask",
+            "params": {
+              "hue_low": 35,
+              "hue_high": 90,
+              "saturation_low": 65,
+              "saturation_high": 255,
+              "value_low": 45,
+              "value_high": 255
+            }
+          },
+          {
+            "id": "clean",
+            "kind": "morph_open",
+            "params": {
+              "kernel": 3
+            }
+          },
+          {
+            "id": "leaf_objects",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.001,
+              "max_area": 0.12,
+              "min_circularity": 0.0,
+              "min_solidity": 0.85,
+              "min_aspect": 1.55,
+              "max_aspect": 4.0,
+              "reject_border": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "brightness",
+        "name": "Brightness-only alternative",
+        "parent_id": "main",
+        "fork_after": "start",
+        "rationale": "Brightness loses the color distinction; compare the brown leaf and green token.",
+        "operations": [
+          {
+            "id": "brightness_gray",
+            "kind": "grayscale",
+            "params": {}
+          },
+          {
+            "id": "brightness_otsu",
+            "kind": "otsu",
+            "params": {}
+          },
+          {
+            "id": "brightness_invert",
+            "kind": "invert",
+            "params": {}
+          },
+          {
+            "id": "brightness_objects",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.001,
+              "max_area": 0.12,
+              "min_circularity": 0.0,
+              "min_solidity": 0.0,
+              "min_aspect": 1.0,
+              "max_aspect": 100.0,
+              "reject_border": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "saturation",
+        "name": "Saturation + shape alternative",
+        "parent_id": "main",
+        "fork_after": "start",
+        "rationale": "Saturation finds colorful objects but also includes yellow/brown leaves.",
+        "operations": [
+          {
+            "id": "sat",
+            "kind": "channel",
+            "params": {
+              "channel": "saturation"
+            }
+          },
+          {
+            "id": "sat_threshold",
+            "kind": "threshold",
+            "params": {
+              "value": 65
+            }
+          },
+          {
+            "id": "sat_objects",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.001,
+              "max_area": 0.12,
+              "min_circularity": 0.0,
+              "min_solidity": 0.0,
+              "min_aspect": 1.55,
+              "max_aspect": 4.0,
+              "reject_border": true
+            }
+          }
+        ]
+      }
+    ],
+    "recommended_timeline_id": "main",
+    "suggested_measurements": [
+      "length",
+      "width",
+      "color",
+      "area"
+    ],
+    "verification": {
+      "protocol": "Actual CPU execution of all declared pipelines; one-to-one box IoU >= 0.5. Recommended path must have no missed targets or extra detections in each constructed sample.",
+      "samples": [
+        {
+          "sample_id": "b-leaves-base",
+          "expected_count": 3,
+          "pipelines": [
+            {
+              "timeline_id": "main",
+              "count": 3,
+              "tp": 3,
+              "fp": 0,
+              "fn": 0
+            },
+            {
+              "timeline_id": "brightness",
+              "count": 6,
+              "tp": 3,
+              "fp": 3,
+              "fn": 0
+            },
+            {
+              "timeline_id": "saturation",
+              "count": 5,
+              "tp": 3,
+              "fp": 2,
+              "fn": 0
+            }
+          ]
+        },
+        {
+          "sample_id": "b-leaves-variation",
+          "expected_count": 3,
+          "pipelines": [
+            {
+              "timeline_id": "main",
+              "count": 3,
+              "tp": 3,
+              "fp": 0,
+              "fn": 0
+            },
+            {
+              "timeline_id": "brightness",
+              "count": 6,
+              "tp": 3,
+              "fp": 3,
+              "fn": 0
+            },
+            {
+              "timeline_id": "saturation",
+              "count": 5,
+              "tp": 3,
+              "fp": 2,
+              "fn": 0
+            }
+          ]
+        },
+        {
+          "sample_id": "b-leaves-negative",
+          "expected_count": 0,
+          "pipelines": [
+            {
+              "timeline_id": "main",
+              "count": 0,
+              "tp": 0,
+              "fp": 0,
+              "fn": 0
+            },
+            {
+              "timeline_id": "brightness",
+              "count": 3,
+              "tp": 0,
+              "fp": 3,
+              "fn": 0
+            },
+            {
+              "timeline_id": "saturation",
+              "count": 2,
+              "tp": 0,
+              "fp": 2,
+              "fn": 0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "b-pills",
+    "title": "Elongated tablets · 2D",
+    "category": "Object tests · 2D",
+    "collection": "object-tests",
+    "filename": "object-tests/b-pills-base.png",
+    "path": "/examples/object-tests/b-pills-base.png",
+    "boxes": [
+      {
+        "x": 0.09635416666666667,
+        "y": 0.19140625,
+        "width": 0.17447916666666666,
+        "height": 0.15234375
+      },
+      {
+        "x": 0.4401041666666667,
+        "y": 0.1875,
+        "width": 0.17447916666666666,
+        "height": 0.21484375
+      },
+      {
+        "x": 0.6197916666666666,
+        "y": 0.6796875,
+        "width": 0.1796875,
+        "height": 0.11328125
+      }
+    ],
+    "labeled": true,
+    "source": "",
+    "credit": "Generated analytic teaching images · known geometry",
+    "description": "Find pale elongated capsule-shaped tablets. Ignore round tablets, pale squares and the orange capsule.",
+    "context": "Generated analytic 2D teaching images with constructed labels. All three images are development/training examples; these checks do not establish reliability on camera images, unseen objects or physical measurements.",
+    "workbench_only": true,
+    "samples": [
+      {
+        "id": "b-pills-base",
+        "name": "Elongated tablets · base",
+        "filename": "object-tests/b-pills-base.png",
+        "path": "/examples/object-tests/b-pills-base.png",
+        "boxes": [
+          {
+            "x": 0.09635416666666667,
+            "y": 0.19140625,
+            "width": 0.17447916666666666,
+            "height": 0.15234375
+          },
+          {
+            "x": 0.4401041666666667,
+            "y": 0.1875,
+            "width": 0.17447916666666666,
+            "height": 0.21484375
+          },
+          {
+            "x": 0.6197916666666666,
+            "y": 0.6796875,
+            "width": 0.1796875,
+            "height": 0.11328125
+          }
+        ],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 3,
+        "variant": "base"
+      },
+      {
+        "id": "b-pills-variation",
+        "name": "Elongated tablets · variation",
+        "filename": "object-tests/b-pills-variation.png",
+        "path": "/examples/object-tests/b-pills-variation.png",
+        "boxes": [
+          {
+            "x": 0.12760416666666666,
+            "y": 0.1875,
+            "width": 0.14322916666666666,
+            "height": 0.19140625
+          },
+          {
+            "x": 0.4583333333333333,
+            "y": 0.1796875,
+            "width": 0.17447916666666666,
+            "height": 0.15234375
+          },
+          {
+            "x": 0.7109375,
+            "y": 0.546875,
+            "width": 0.11197916666666667,
+            "height": 0.26953125
+          },
+          {
+            "x": 0.20052083333333334,
+            "y": 0.69140625,
+            "width": 0.17447916666666666,
+            "height": 0.10546875
+          }
+        ],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 4,
+        "variant": "variation"
+      },
+      {
+        "id": "b-pills-negative",
+        "name": "Elongated tablets · negative",
+        "filename": "object-tests/b-pills-negative.png",
+        "path": "/examples/object-tests/b-pills-negative.png",
+        "boxes": [],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 0,
+        "variant": "negative"
+      }
+    ],
+    "pipelines": [
+      {
+        "id": "main",
+        "name": "Bright elongated tablets",
+        "parent_id": null,
+        "fork_after": null,
+        "rationale": "Intensity and known shape together reject the constructed distractors. Inspect visible extents before trusting measurements.",
+        "operations": [
+          {
+            "id": "start",
+            "kind": "resize",
+            "params": {
+              "max_side": 384
+            }
+          },
+          {
+            "id": "gray",
+            "kind": "grayscale",
+            "params": {}
+          },
+          {
+            "id": "selection",
+            "kind": "range_mask",
+            "params": {
+              "low": 180,
+              "high": 255
+            }
+          },
+          {
+            "id": "clean",
+            "kind": "morph_close",
+            "params": {
+              "kernel": 3
+            }
+          },
+          {
+            "id": "objects",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.001,
+              "max_area": 0.12,
+              "min_circularity": 0.0,
+              "min_solidity": 0.9,
+              "min_aspect": 1.8,
+              "max_aspect": 4.5,
+              "reject_border": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "intensity",
+        "name": "Intensity without shape filtering",
+        "parent_id": "main",
+        "fork_after": "selection",
+        "rationale": "Keep raw intensity candidates to see why shape constraints matter.",
+        "operations": [
+          {
+            "id": "intensity_objects",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.0003,
+              "max_area": 0.12,
+              "min_circularity": 0.0,
+              "min_solidity": 0.0,
+              "min_aspect": 1.0,
+              "max_aspect": 100.0,
+              "reject_border": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "edges",
+        "name": "Edge contour alternative",
+        "parent_id": "main",
+        "fork_after": "gray",
+        "rationale": "Edges offer a separate outline estimate but may shift thin-object dimensions by a pixel.",
+        "operations": [
+          {
+            "id": "edges_canny",
+            "kind": "canny",
+            "params": {
+              "low": 40,
+              "high": 110
+            }
+          },
+          {
+            "id": "edge_objects",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.001,
+              "max_area": 0.12,
+              "min_circularity": 0.0,
+              "min_solidity": 0.9,
+              "min_aspect": 1.8,
+              "max_aspect": 4.5,
+              "reject_border": true
+            }
+          }
+        ]
+      }
+    ],
+    "recommended_timeline_id": "main",
+    "suggested_measurements": [
+      "length",
+      "width",
+      "angle",
+      "color"
+    ],
+    "verification": {
+      "protocol": "Actual CPU execution of all declared pipelines; one-to-one box IoU >= 0.5. Recommended path must have no missed targets or extra detections in each constructed sample.",
+      "samples": [
+        {
+          "sample_id": "b-pills-base",
+          "expected_count": 3,
+          "pipelines": [
+            {
+              "timeline_id": "main",
+              "count": 3,
+              "tp": 3,
+              "fp": 0,
+              "fn": 0
+            },
+            {
+              "timeline_id": "intensity",
+              "count": 5,
+              "tp": 3,
+              "fp": 2,
+              "fn": 0
+            },
+            {
+              "timeline_id": "edges",
+              "count": 3,
+              "tp": 3,
+              "fp": 0,
+              "fn": 0
+            }
+          ]
+        },
+        {
+          "sample_id": "b-pills-variation",
+          "expected_count": 4,
+          "pipelines": [
+            {
+              "timeline_id": "main",
+              "count": 4,
+              "tp": 4,
+              "fp": 0,
+              "fn": 0
+            },
+            {
+              "timeline_id": "intensity",
+              "count": 6,
+              "tp": 4,
+              "fp": 2,
+              "fn": 0
+            },
+            {
+              "timeline_id": "edges",
+              "count": 4,
+              "tp": 4,
+              "fp": 0,
+              "fn": 0
+            }
+          ]
+        },
+        {
+          "sample_id": "b-pills-negative",
+          "expected_count": 0,
+          "pipelines": [
+            {
+              "timeline_id": "main",
+              "count": 0,
+              "tp": 0,
+              "fp": 0,
+              "fn": 0
+            },
+            {
+              "timeline_id": "intensity",
+              "count": 2,
+              "tp": 0,
+              "fp": 2,
+              "fn": 0
+            },
+            {
+              "timeline_id": "edges",
+              "count": 1,
+              "tp": 0,
+              "fp": 1,
+              "fn": 0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "b-pins",
+    "title": "Connector pin lengths · 2D",
+    "category": "Object tests · 2D",
+    "collection": "object-tests",
+    "filename": "object-tests/b-pins-base.png",
+    "path": "/examples/object-tests/b-pins-base.png",
+    "boxes": [
+      {
+        "x": 0.07291666666666667,
+        "y": 0.21484375,
+        "width": 0.16927083333333334,
+        "height": 0.09765625
+      },
+      {
+        "x": 0.3333333333333333,
+        "y": 0.234375,
+        "width": 0.1953125,
+        "height": 0.13671875
+      },
+      {
+        "x": 0.6979166666666666,
+        "y": 0.16015625,
+        "width": 0.0859375,
+        "height": 0.26953125
+      },
+      {
+        "x": 0.2109375,
+        "y": 0.6953125,
+        "width": 0.21614583333333334,
+        "height": 0.08203125
+      }
+    ],
+    "labeled": true,
+    "source": "",
+    "credit": "Generated analytic teaching images · known geometry",
+    "description": "Find dark long narrow connector pins. Measure visible length; ignore short blocks, round fasteners and pale lines.",
+    "context": "Generated analytic 2D teaching images with constructed labels. All three images are development/training examples; these checks do not establish reliability on camera images, unseen objects or physical measurements.",
+    "workbench_only": true,
+    "samples": [
+      {
+        "id": "b-pins-base",
+        "name": "Connector pin lengths · base",
+        "filename": "object-tests/b-pins-base.png",
+        "path": "/examples/object-tests/b-pins-base.png",
+        "boxes": [
+          {
+            "x": 0.07291666666666667,
+            "y": 0.21484375,
+            "width": 0.16927083333333334,
+            "height": 0.09765625
+          },
+          {
+            "x": 0.3333333333333333,
+            "y": 0.234375,
+            "width": 0.1953125,
+            "height": 0.13671875
+          },
+          {
+            "x": 0.6979166666666666,
+            "y": 0.16015625,
+            "width": 0.0859375,
+            "height": 0.26953125
+          },
+          {
+            "x": 0.2109375,
+            "y": 0.6953125,
+            "width": 0.21614583333333334,
+            "height": 0.08203125
+          }
+        ],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 4,
+        "variant": "base"
+      },
+      {
+        "id": "b-pins-variation",
+        "name": "Connector pin lengths · variation",
+        "filename": "object-tests/b-pins-variation.png",
+        "path": "/examples/object-tests/b-pins-variation.png",
+        "boxes": [
+          {
+            "x": 0.09635416666666667,
+            "y": 0.2421875,
+            "width": 0.09635416666666667,
+            "height": 0.26171875
+          },
+          {
+            "x": 0.3645833333333333,
+            "y": 0.1796875,
+            "width": 0.1953125,
+            "height": 0.12890625
+          },
+          {
+            "x": 0.6588541666666666,
+            "y": 0.58203125,
+            "width": 0.1953125,
+            "height": 0.18359375
+          },
+          {
+            "x": 0.2916666666666667,
+            "y": 0.703125,
+            "width": 0.1640625,
+            "height": 0.03515625
+          }
+        ],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 4,
+        "variant": "variation"
+      },
+      {
+        "id": "b-pins-negative",
+        "name": "Connector pin lengths · negative",
+        "filename": "object-tests/b-pins-negative.png",
+        "path": "/examples/object-tests/b-pins-negative.png",
+        "boxes": [],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 0,
+        "variant": "negative"
+      }
+    ],
+    "pipelines": [
+      {
+        "id": "main",
+        "name": "Dark elongated pins",
+        "parent_id": null,
+        "fork_after": null,
+        "rationale": "Intensity and known shape together reject the constructed distractors. Inspect visible extents before trusting measurements.",
+        "operations": [
+          {
+            "id": "start",
+            "kind": "resize",
+            "params": {
+              "max_side": 384
+            }
+          },
+          {
+            "id": "gray",
+            "kind": "grayscale",
+            "params": {}
+          },
+          {
+            "id": "selection",
+            "kind": "range_mask",
+            "params": {
+              "low": 0,
+              "high": 90
+            }
+          },
+          {
+            "id": "clean",
+            "kind": "morph_close",
+            "params": {
+              "kernel": 3
+            }
+          },
+          {
+            "id": "objects",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.0005,
+              "max_area": 0.12,
+              "min_circularity": 0.0,
+              "min_solidity": 0.8,
+              "min_aspect": 4.5,
+              "max_aspect": 16.0,
+              "reject_border": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "intensity",
+        "name": "Intensity without shape filtering",
+        "parent_id": "main",
+        "fork_after": "selection",
+        "rationale": "Keep raw intensity candidates to see why shape constraints matter.",
+        "operations": [
+          {
+            "id": "intensity_objects",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.0003,
+              "max_area": 0.12,
+              "min_circularity": 0.0,
+              "min_solidity": 0.0,
+              "min_aspect": 1.0,
+              "max_aspect": 100.0,
+              "reject_border": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "edges",
+        "name": "Edge contour alternative",
+        "parent_id": "main",
+        "fork_after": "gray",
+        "rationale": "Edges offer a separate outline estimate but may shift thin-object dimensions by a pixel.",
+        "operations": [
+          {
+            "id": "edges_canny",
+            "kind": "canny",
+            "params": {
+              "low": 40,
+              "high": 110
+            }
+          },
+          {
+            "id": "edge_objects",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.0005,
+              "max_area": 0.12,
+              "min_circularity": 0.0,
+              "min_solidity": 0.8,
+              "min_aspect": 4.5,
+              "max_aspect": 16.0,
+              "reject_border": true
+            }
+          }
+        ]
+      }
+    ],
+    "recommended_timeline_id": "main",
+    "suggested_measurements": [
+      "length",
+      "width",
+      "angle",
+      "center"
+    ],
+    "verification": {
+      "protocol": "Actual CPU execution of all declared pipelines; one-to-one box IoU >= 0.5. Recommended path must have no missed targets or extra detections in each constructed sample.",
+      "samples": [
+        {
+          "sample_id": "b-pins-base",
+          "expected_count": 4,
+          "pipelines": [
+            {
+              "timeline_id": "main",
+              "count": 4,
+              "tp": 4,
+              "fp": 0,
+              "fn": 0
+            },
+            {
+              "timeline_id": "intensity",
+              "count": 6,
+              "tp": 4,
+              "fp": 2,
+              "fn": 0
+            },
+            {
+              "timeline_id": "edges",
+              "count": 4,
+              "tp": 4,
+              "fp": 0,
+              "fn": 0
+            }
+          ]
+        },
+        {
+          "sample_id": "b-pins-variation",
+          "expected_count": 4,
+          "pipelines": [
+            {
+              "timeline_id": "main",
+              "count": 4,
+              "tp": 4,
+              "fp": 0,
+              "fn": 0
+            },
+            {
+              "timeline_id": "intensity",
+              "count": 6,
+              "tp": 4,
+              "fp": 2,
+              "fn": 0
+            },
+            {
+              "timeline_id": "edges",
+              "count": 4,
+              "tp": 4,
+              "fp": 0,
+              "fn": 0
+            }
+          ]
+        },
+        {
+          "sample_id": "b-pins-negative",
+          "expected_count": 0,
+          "pipelines": [
+            {
+              "timeline_id": "main",
+              "count": 0,
+              "tp": 0,
+              "fp": 0,
+              "fn": 0
+            },
+            {
+              "timeline_id": "intensity",
+              "count": 2,
+              "tp": 0,
+              "fp": 2,
+              "fn": 0
+            },
+            {
+              "timeline_id": "edges",
+              "count": 1,
+              "tp": 0,
+              "fp": 1,
+              "fn": 0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "b-solder-pads",
+    "title": "Bright solder pads · 2D",
+    "category": "Object tests · 2D",
+    "collection": "object-tests",
+    "filename": "object-tests/b-solder-pads-base.png",
+    "path": "/examples/object-tests/b-solder-pads-base.png",
+    "boxes": [
+      {
+        "x": 0.09375,
+        "y": 0.23828125,
+        "width": 0.06510416666666667,
+        "height": 0.04296875
+      },
+      {
+        "x": 0.3177083333333333,
+        "y": 0.66796875,
+        "width": 0.07552083333333333,
+        "height": 0.07421875
+      },
+      {
+        "x": 0.5807291666666666,
+        "y": 0.25,
+        "width": 0.07552083333333333,
+        "height": 0.07421875
+      },
+      {
+        "x": 0.8333333333333334,
+        "y": 0.6171875,
+        "width": 0.06510416666666667,
+        "height": 0.09765625
+      }
+    ],
+    "labeled": true,
+    "source": "",
+    "credit": "Generated analytic teaching images · known geometry",
+    "description": "Find four locally bright elongated solder pads despite changing board brightness. Ignore round spots and dark marks.",
+    "context": "Generated analytic 2D teaching images with constructed labels. All three images are development/training examples; these checks do not establish reliability on camera images, unseen objects or physical measurements.",
+    "workbench_only": true,
+    "samples": [
+      {
+        "id": "b-solder-pads-base",
+        "name": "Bright solder pads · base",
+        "filename": "object-tests/b-solder-pads-base.png",
+        "path": "/examples/object-tests/b-solder-pads-base.png",
+        "boxes": [
+          {
+            "x": 0.09375,
+            "y": 0.23828125,
+            "width": 0.06510416666666667,
+            "height": 0.04296875
+          },
+          {
+            "x": 0.3177083333333333,
+            "y": 0.66796875,
+            "width": 0.07552083333333333,
+            "height": 0.07421875
+          },
+          {
+            "x": 0.5807291666666666,
+            "y": 0.25,
+            "width": 0.07552083333333333,
+            "height": 0.07421875
+          },
+          {
+            "x": 0.8333333333333334,
+            "y": 0.6171875,
+            "width": 0.06510416666666667,
+            "height": 0.09765625
+          }
+        ],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 4,
+        "variant": "base"
+      },
+      {
+        "id": "b-solder-pads-variation",
+        "name": "Bright solder pads · variation",
+        "filename": "object-tests/b-solder-pads-variation.png",
+        "path": "/examples/object-tests/b-solder-pads-variation.png",
+        "boxes": [
+          {
+            "x": 0.10677083333333333,
+            "y": 0.671875,
+            "width": 0.07552083333333333,
+            "height": 0.08203125
+          },
+          {
+            "x": 0.3619791666666667,
+            "y": 0.20703125,
+            "width": 0.0546875,
+            "height": 0.10546875
+          },
+          {
+            "x": 0.5651041666666666,
+            "y": 0.640625,
+            "width": 0.08072916666666667,
+            "height": 0.07421875
+          },
+          {
+            "x": 0.8203125,
+            "y": 0.2734375,
+            "width": 0.06510416666666667,
+            "height": 0.04296875
+          }
+        ],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 4,
+        "variant": "variation"
+      },
+      {
+        "id": "b-solder-pads-negative",
+        "name": "Bright solder pads · negative",
+        "filename": "object-tests/b-solder-pads-negative.png",
+        "path": "/examples/object-tests/b-solder-pads-negative.png",
+        "boxes": [],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 0,
+        "variant": "negative"
+      }
+    ],
+    "pipelines": [
+      {
+        "id": "global",
+        "name": "Global intensity baseline",
+        "parent_id": null,
+        "fork_after": null,
+        "rationale": "The same global cutoff cannot isolate all marks across this changing background.",
+        "operations": [
+          {
+            "id": "start",
+            "kind": "resize",
+            "params": {
+              "max_side": 384
+            }
+          },
+          {
+            "id": "gray",
+            "kind": "grayscale",
+            "params": {}
+          },
+          {
+            "id": "fixed_threshold",
+            "kind": "threshold",
+            "params": {
+              "value": 180
+            }
+          },
+          {
+            "id": "fixed_objects",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.0005,
+              "max_area": 0.012,
+              "min_circularity": 0.0,
+              "min_solidity": 0.8,
+              "min_aspect": 1.6,
+              "max_aspect": 4.0,
+              "reject_border": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "local",
+        "name": "Top-hat solder-pad detail",
+        "parent_id": "global",
+        "fork_after": "gray",
+        "rationale": "A kernel wider than each pad removes slow illumination changes; local contrast and elongation retain the intended marks.",
+        "operations": [
+          {
+            "id": "local_detail",
+            "kind": "top_hat",
+            "params": {
+              "kernel": 31
+            }
+          },
+          {
+            "id": "local_mask",
+            "kind": "range_mask",
+            "params": {
+              "low": 35,
+              "high": 255
+            }
+          },
+          {
+            "id": "local_objects",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.0005,
+              "max_area": 0.012,
+              "min_circularity": 0.0,
+              "min_solidity": 0.8,
+              "min_aspect": 1.6,
+              "max_aspect": 4.0,
+              "reject_border": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "edges",
+        "name": "Direct edge alternative",
+        "parent_id": "global",
+        "fork_after": "gray",
+        "rationale": "Compare contour closure and measurements using gradients instead of local background subtraction.",
+        "operations": [
+          {
+            "id": "edge_detect",
+            "kind": "canny",
+            "params": {
+              "low": 30,
+              "high": 85
+            }
+          },
+          {
+            "id": "edge_objects",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.0005,
+              "max_area": 0.012,
+              "min_circularity": 0.0,
+              "min_solidity": 0.8,
+              "min_aspect": 1.6,
+              "max_aspect": 4.0,
+              "reject_border": true
+            }
+          }
+        ]
+      }
+    ],
+    "recommended_timeline_id": "local",
+    "suggested_measurements": [
+      "length",
+      "width",
+      "area",
+      "center"
+    ],
+    "verification": {
+      "protocol": "Actual CPU execution of all declared pipelines; one-to-one box IoU >= 0.5. Recommended path must have no missed targets or extra detections in each constructed sample.",
+      "samples": [
+        {
+          "sample_id": "b-solder-pads-base",
+          "expected_count": 4,
+          "pipelines": [
+            {
+              "timeline_id": "global",
+              "count": 1,
+              "tp": 1,
+              "fp": 0,
+              "fn": 3
+            },
+            {
+              "timeline_id": "local",
+              "count": 4,
+              "tp": 4,
+              "fp": 0,
+              "fn": 0
+            },
+            {
+              "timeline_id": "edges",
+              "count": 5,
+              "tp": 4,
+              "fp": 1,
+              "fn": 0
+            }
+          ]
+        },
+        {
+          "sample_id": "b-solder-pads-variation",
+          "expected_count": 4,
+          "pipelines": [
+            {
+              "timeline_id": "global",
+              "count": 1,
+              "tp": 1,
+              "fp": 0,
+              "fn": 3
+            },
+            {
+              "timeline_id": "local",
+              "count": 4,
+              "tp": 4,
+              "fp": 0,
+              "fn": 0
+            },
+            {
+              "timeline_id": "edges",
+              "count": 5,
+              "tp": 4,
+              "fp": 1,
+              "fn": 0
+            }
+          ]
+        },
+        {
+          "sample_id": "b-solder-pads-negative",
+          "expected_count": 0,
+          "pipelines": [
+            {
+              "timeline_id": "global",
+              "count": 0,
+              "tp": 0,
+              "fp": 0,
+              "fn": 0
+            },
+            {
+              "timeline_id": "local",
+              "count": 0,
+              "tp": 0,
+              "fp": 0,
+              "fn": 0
+            },
+            {
+              "timeline_id": "edges",
+              "count": 1,
+              "tp": 0,
+              "fp": 1,
+              "fn": 0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "b-print-marks",
+    "title": "Dark print marks · 2D",
+    "category": "Object tests · 2D",
+    "collection": "object-tests",
+    "filename": "object-tests/b-print-marks-base.png",
+    "path": "/examples/object-tests/b-print-marks-base.png",
+    "boxes": [
+      {
+        "x": 0.09375,
+        "y": 0.23828125,
+        "width": 0.06510416666666667,
+        "height": 0.04296875
+      },
+      {
+        "x": 0.3177083333333333,
+        "y": 0.66796875,
+        "width": 0.07552083333333333,
+        "height": 0.07421875
+      },
+      {
+        "x": 0.5807291666666666,
+        "y": 0.25,
+        "width": 0.07552083333333333,
+        "height": 0.07421875
+      },
+      {
+        "x": 0.8333333333333334,
+        "y": 0.6171875,
+        "width": 0.06510416666666667,
+        "height": 0.09765625
+      }
+    ],
+    "labeled": true,
+    "source": "",
+    "credit": "Generated analytic teaching images · known geometry",
+    "description": "Find four dark elongated print marks on uneven paper illumination. Ignore round ink spots and bright streaks.",
+    "context": "Generated analytic 2D teaching images with constructed labels. All three images are development/training examples; these checks do not establish reliability on camera images, unseen objects or physical measurements.",
+    "workbench_only": true,
+    "samples": [
+      {
+        "id": "b-print-marks-base",
+        "name": "Dark print marks · base",
+        "filename": "object-tests/b-print-marks-base.png",
+        "path": "/examples/object-tests/b-print-marks-base.png",
+        "boxes": [
+          {
+            "x": 0.09375,
+            "y": 0.23828125,
+            "width": 0.06510416666666667,
+            "height": 0.04296875
+          },
+          {
+            "x": 0.3177083333333333,
+            "y": 0.66796875,
+            "width": 0.07552083333333333,
+            "height": 0.07421875
+          },
+          {
+            "x": 0.5807291666666666,
+            "y": 0.25,
+            "width": 0.07552083333333333,
+            "height": 0.07421875
+          },
+          {
+            "x": 0.8333333333333334,
+            "y": 0.6171875,
+            "width": 0.06510416666666667,
+            "height": 0.09765625
+          }
+        ],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 4,
+        "variant": "base"
+      },
+      {
+        "id": "b-print-marks-variation",
+        "name": "Dark print marks · variation",
+        "filename": "object-tests/b-print-marks-variation.png",
+        "path": "/examples/object-tests/b-print-marks-variation.png",
+        "boxes": [
+          {
+            "x": 0.10677083333333333,
+            "y": 0.671875,
+            "width": 0.07552083333333333,
+            "height": 0.08203125
+          },
+          {
+            "x": 0.3619791666666667,
+            "y": 0.20703125,
+            "width": 0.0546875,
+            "height": 0.10546875
+          },
+          {
+            "x": 0.5651041666666666,
+            "y": 0.640625,
+            "width": 0.08072916666666667,
+            "height": 0.07421875
+          },
+          {
+            "x": 0.8203125,
+            "y": 0.2734375,
+            "width": 0.06510416666666667,
+            "height": 0.04296875
+          }
+        ],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 4,
+        "variant": "variation"
+      },
+      {
+        "id": "b-print-marks-negative",
+        "name": "Dark print marks · negative",
+        "filename": "object-tests/b-print-marks-negative.png",
+        "path": "/examples/object-tests/b-print-marks-negative.png",
+        "boxes": [],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 0,
+        "variant": "negative"
+      }
+    ],
+    "pipelines": [
+      {
+        "id": "global",
+        "name": "Global intensity baseline",
+        "parent_id": null,
+        "fork_after": null,
+        "rationale": "The same global cutoff cannot isolate all marks across this changing background.",
+        "operations": [
+          {
+            "id": "start",
+            "kind": "resize",
+            "params": {
+              "max_side": 384
+            }
+          },
+          {
+            "id": "gray",
+            "kind": "grayscale",
+            "params": {}
+          },
+          {
+            "id": "fixed_threshold",
+            "kind": "threshold",
+            "params": {
+              "value": 130
+            }
+          },
+          {
+            "id": "fixed_invert",
+            "kind": "invert",
+            "params": {}
+          },
+          {
+            "id": "fixed_objects",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.0005,
+              "max_area": 0.012,
+              "min_circularity": 0.0,
+              "min_solidity": 0.8,
+              "min_aspect": 1.6,
+              "max_aspect": 4.0,
+              "reject_border": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "local",
+        "name": "Black-hat dark print detail",
+        "parent_id": "global",
+        "fork_after": "gray",
+        "rationale": "A kernel wider than each pad removes slow illumination changes; local contrast and elongation retain the intended marks.",
+        "operations": [
+          {
+            "id": "local_detail",
+            "kind": "black_hat",
+            "params": {
+              "kernel": 31
+            }
+          },
+          {
+            "id": "local_mask",
+            "kind": "range_mask",
+            "params": {
+              "low": 35,
+              "high": 255
+            }
+          },
+          {
+            "id": "local_objects",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.0005,
+              "max_area": 0.012,
+              "min_circularity": 0.0,
+              "min_solidity": 0.8,
+              "min_aspect": 1.6,
+              "max_aspect": 4.0,
+              "reject_border": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "edges",
+        "name": "Direct edge alternative",
+        "parent_id": "global",
+        "fork_after": "gray",
+        "rationale": "Compare contour closure and measurements using gradients instead of local background subtraction.",
+        "operations": [
+          {
+            "id": "edge_detect",
+            "kind": "canny",
+            "params": {
+              "low": 30,
+              "high": 85
+            }
+          },
+          {
+            "id": "edge_objects",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.0005,
+              "max_area": 0.012,
+              "min_circularity": 0.0,
+              "min_solidity": 0.8,
+              "min_aspect": 1.6,
+              "max_aspect": 4.0,
+              "reject_border": true
+            }
+          }
+        ]
+      }
+    ],
+    "recommended_timeline_id": "local",
+    "suggested_measurements": [
+      "length",
+      "width",
+      "angle",
+      "center"
+    ],
+    "verification": {
+      "protocol": "Actual CPU execution of all declared pipelines; one-to-one box IoU >= 0.5. Recommended path must have no missed targets or extra detections in each constructed sample.",
+      "samples": [
+        {
+          "sample_id": "b-print-marks-base",
+          "expected_count": 4,
+          "pipelines": [
+            {
+              "timeline_id": "global",
+              "count": 2,
+              "tp": 2,
+              "fp": 0,
+              "fn": 2
+            },
+            {
+              "timeline_id": "local",
+              "count": 4,
+              "tp": 4,
+              "fp": 0,
+              "fn": 0
+            },
+            {
+              "timeline_id": "edges",
+              "count": 5,
+              "tp": 4,
+              "fp": 1,
+              "fn": 0
+            }
+          ]
+        },
+        {
+          "sample_id": "b-print-marks-variation",
+          "expected_count": 4,
+          "pipelines": [
+            {
+              "timeline_id": "global",
+              "count": 2,
+              "tp": 2,
+              "fp": 0,
+              "fn": 2
+            },
+            {
+              "timeline_id": "local",
+              "count": 4,
+              "tp": 4,
+              "fp": 0,
+              "fn": 0
+            },
+            {
+              "timeline_id": "edges",
+              "count": 5,
+              "tp": 4,
+              "fp": 1,
+              "fn": 0
+            }
+          ]
+        },
+        {
+          "sample_id": "b-print-marks-negative",
+          "expected_count": 0,
+          "pipelines": [
+            {
+              "timeline_id": "global",
+              "count": 0,
+              "tp": 0,
+              "fp": 0,
+              "fn": 0
+            },
+            {
+              "timeline_id": "local",
+              "count": 0,
+              "tp": 0,
+              "fp": 0,
+              "fn": 0
+            },
+            {
+              "timeline_id": "edges",
+              "count": 1,
+              "tp": 0,
+              "fp": 1,
+              "fn": 0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "b-fiducials",
+    "title": "Square fiducial outlines · 2D",
+    "category": "Object tests · 2D",
+    "collection": "object-tests",
+    "filename": "object-tests/b-fiducials-base.png",
+    "path": "/examples/object-tests/b-fiducials-base.png",
+    "boxes": [
+      {
+        "x": 0.11458333333333333,
+        "y": 0.1953125,
+        "width": 0.1015625,
+        "height": 0.14453125
+      },
+      {
+        "x": 0.4947916666666667,
+        "y": 0.203125,
+        "width": 0.1015625,
+        "height": 0.15234375
+      },
+      {
+        "x": 0.6927083333333334,
+        "y": 0.640625,
+        "width": 0.10677083333333333,
+        "height": 0.16796875
+      }
+    ],
+    "labeled": true,
+    "source": "",
+    "credit": "Generated analytic teaching images · known geometry",
+    "description": "Find three dark separate square marker outlines. Ignore long bars, tiny ink spots, gray squares and plus signs. This detects outlines, not marker identity.",
+    "context": "Generated analytic 2D teaching images with constructed labels. All three images are development/training examples; these checks do not establish reliability on camera images, unseen objects or physical measurements.",
+    "workbench_only": true,
+    "samples": [
+      {
+        "id": "b-fiducials-base",
+        "name": "Square fiducial outlines · base",
+        "filename": "object-tests/b-fiducials-base.png",
+        "path": "/examples/object-tests/b-fiducials-base.png",
+        "boxes": [
+          {
+            "x": 0.11458333333333333,
+            "y": 0.1953125,
+            "width": 0.1015625,
+            "height": 0.14453125
+          },
+          {
+            "x": 0.4947916666666667,
+            "y": 0.203125,
+            "width": 0.1015625,
+            "height": 0.15234375
+          },
+          {
+            "x": 0.6927083333333334,
+            "y": 0.640625,
+            "width": 0.10677083333333333,
+            "height": 0.16796875
+          }
+        ],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 3,
+        "variant": "base"
+      },
+      {
+        "id": "b-fiducials-variation",
+        "name": "Square fiducial outlines · variation",
+        "filename": "object-tests/b-fiducials-variation.png",
+        "path": "/examples/object-tests/b-fiducials-variation.png",
+        "boxes": [
+          {
+            "x": 0.13541666666666666,
+            "y": 0.59375,
+            "width": 0.12239583333333333,
+            "height": 0.18359375
+          },
+          {
+            "x": 0.4427083333333333,
+            "y": 0.1640625,
+            "width": 0.15885416666666666,
+            "height": 0.23828125
+          },
+          {
+            "x": 0.7213541666666666,
+            "y": 0.625,
+            "width": 0.11197916666666667,
+            "height": 0.16796875
+          }
+        ],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 3,
+        "variant": "variation"
+      },
+      {
+        "id": "b-fiducials-negative",
+        "name": "Square fiducial outlines · negative",
+        "filename": "object-tests/b-fiducials-negative.png",
+        "path": "/examples/object-tests/b-fiducials-negative.png",
+        "boxes": [],
+        "labeled": true,
+        "split": "train",
+        "expected_count": 0,
+        "variant": "negative"
+      }
+    ],
+    "pipelines": [
+      {
+        "id": "main",
+        "name": "Dark square marker outlines",
+        "parent_id": null,
+        "fork_after": null,
+        "rationale": "Intensity and known shape together reject the constructed distractors. Inspect visible extents before trusting measurements.",
+        "operations": [
+          {
+            "id": "start",
+            "kind": "resize",
+            "params": {
+              "max_side": 384
+            }
+          },
+          {
+            "id": "gray",
+            "kind": "grayscale",
+            "params": {}
+          },
+          {
+            "id": "selection",
+            "kind": "range_mask",
+            "params": {
+              "low": 0,
+              "high": 90
+            }
+          },
+          {
+            "id": "clean",
+            "kind": "morph_close",
+            "params": {
+              "kernel": 3
+            }
+          },
+          {
+            "id": "objects",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.003,
+              "max_area": 0.12,
+              "min_circularity": 0.0,
+              "min_solidity": 0.9,
+              "min_aspect": 1.0,
+              "max_aspect": 1.2,
+              "reject_border": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "intensity",
+        "name": "Intensity without shape filtering",
+        "parent_id": "main",
+        "fork_after": "selection",
+        "rationale": "Keep raw intensity candidates to see why shape constraints matter.",
+        "operations": [
+          {
+            "id": "intensity_objects",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.0003,
+              "max_area": 0.12,
+              "min_circularity": 0.0,
+              "min_solidity": 0.0,
+              "min_aspect": 1.0,
+              "max_aspect": 100.0,
+              "reject_border": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "edges",
+        "name": "Edge contour alternative",
+        "parent_id": "main",
+        "fork_after": "gray",
+        "rationale": "Edges offer a separate outline estimate but may shift thin-object dimensions by a pixel.",
+        "operations": [
+          {
+            "id": "edges_canny",
+            "kind": "canny",
+            "params": {
+              "low": 40,
+              "high": 110
+            }
+          },
+          {
+            "id": "edge_objects",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.003,
+              "max_area": 0.12,
+              "min_circularity": 0.0,
+              "min_solidity": 0.9,
+              "min_aspect": 1.0,
+              "max_aspect": 1.2,
+              "reject_border": true
+            }
+          }
+        ]
+      }
+    ],
+    "recommended_timeline_id": "main",
+    "suggested_measurements": [
+      "length",
+      "width",
+      "center",
+      "angle"
+    ],
+    "verification": {
+      "protocol": "Actual CPU execution of all declared pipelines; one-to-one box IoU >= 0.5. Recommended path must have no missed targets or extra detections in each constructed sample.",
+      "samples": [
+        {
+          "sample_id": "b-fiducials-base",
+          "expected_count": 3,
+          "pipelines": [
+            {
+              "timeline_id": "main",
+              "count": 3,
+              "tp": 3,
+              "fp": 0,
+              "fn": 0
+            },
+            {
+              "timeline_id": "intensity",
+              "count": 5,
+              "tp": 3,
+              "fp": 2,
+              "fn": 0
+            },
+            {
+              "timeline_id": "edges",
+              "count": 3,
+              "tp": 3,
+              "fp": 0,
+              "fn": 0
+            }
+          ]
+        },
+        {
+          "sample_id": "b-fiducials-variation",
+          "expected_count": 3,
+          "pipelines": [
+            {
+              "timeline_id": "main",
+              "count": 3,
+              "tp": 3,
+              "fp": 0,
+              "fn": 0
+            },
+            {
+              "timeline_id": "intensity",
+              "count": 5,
+              "tp": 3,
+              "fp": 2,
+              "fn": 0
+            },
+            {
+              "timeline_id": "edges",
+              "count": 3,
+              "tp": 3,
+              "fp": 0,
+              "fn": 0
+            }
+          ]
+        },
+        {
+          "sample_id": "b-fiducials-negative",
+          "expected_count": 0,
+          "pipelines": [
+            {
+              "timeline_id": "main",
+              "count": 0,
+              "tp": 0,
+              "fp": 0,
+              "fn": 0
+            },
+            {
+              "timeline_id": "intensity",
+              "count": 3,
+              "tp": 0,
+              "fp": 3,
+              "fn": 0
+            },
+            {
+              "timeline_id": "edges",
+              "count": 1,
+              "tp": 0,
+              "fp": 1,
+              "fn": 0
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

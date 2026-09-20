@@ -1,0 +1,1 @@
+"""Local CPU vision workbench."""

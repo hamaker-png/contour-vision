@@ -1,0 +1,546 @@
+[
+  {
+    "id": "candy-confirmation",
+    "title": "Branch confirmation · photo",
+    "filename": "smarties.png",
+    "path": "/examples/smarties.png",
+    "source": "https://github.com/opencv/opencv/blob/4.x/samples/data/smarties.png",
+    "credit": "OpenCV sample image",
+    "description": "Detect the four red candies. Ignore orange, green, blue, and brown candies.",
+    "context": "Compare red contours with independently thresholded CImg regions. The confirmation rejects one true red candy on this photo; agreement can reduce recall. Adjust the support after inspecting its intermediate images. These are editable presets, not AI or proof of reliability.",
+    "labeled": true,
+    "boxes": [
+      {
+        "x": 0.0145,
+        "y": 0.5646,
+        "width": 0.1332,
+        "height": 0.1601
+      },
+      {
+        "x": 0.1695,
+        "y": 0.6433,
+        "width": 0.1404,
+        "height": 0.1713
+      },
+      {
+        "x": 0.6247,
+        "y": 0.5197,
+        "width": 0.1453,
+        "height": 0.1573
+      },
+      {
+        "x": 0.4576,
+        "y": 0.7697,
+        "width": 0.1501,
+        "height": 0.1826
+      }
+    ],
+    "workbench_only": true,
+    "pipelines": [
+      {
+        "id": "preset0",
+        "name": "Red hue + contours",
+        "parent_id": null,
+        "fork_after": null,
+        "rationale": "Red wraps around the HSV hue boundary. A circularity filter removes thin color artifacts.",
+        "operations": [
+          {
+            "id": "preset0_0",
+            "kind": "resize",
+            "params": {
+              "max_side": 1280
+            }
+          },
+          {
+            "id": "preset0_1",
+            "kind": "gaussian_blur",
+            "params": {
+              "kernel": 3
+            }
+          },
+          {
+            "id": "preset0_2",
+            "kind": "hsv_mask",
+            "params": {
+              "hue_low": 170,
+              "hue_high": 7,
+              "saturation_low": 120,
+              "saturation_high": 255,
+              "value_low": 65,
+              "value_high": 255
+            }
+          },
+          {
+            "id": "preset0_3",
+            "kind": "morph_open",
+            "params": {
+              "kernel": 3
+            }
+          },
+          {
+            "id": "preset0_4",
+            "kind": "morph_close",
+            "params": {
+              "kernel": 3
+            }
+          },
+          {
+            "id": "preset0_5",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.004,
+              "max_area": 0.85,
+              "min_circularity": 0.65,
+              "min_solidity": 0.0,
+              "min_aspect": 1.0,
+              "max_aspect": 100.0,
+              "reject_border": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "preset1",
+        "name": "Dark connected regions",
+        "parent_id": "preset0",
+        "fork_after": "preset0_1",
+        "rationale": "CImg groups the dark foreground. Inspect missed candy boundaries and merged regions.",
+        "operations": [
+          {
+            "id": "preset1_0",
+            "kind": "grayscale",
+            "params": {}
+          },
+          {
+            "id": "preset1_1",
+            "kind": "otsu",
+            "params": {}
+          },
+          {
+            "id": "preset1_2",
+            "kind": "invert",
+            "params": {}
+          },
+          {
+            "id": "preset1_3",
+            "kind": "morph_open",
+            "params": {
+              "kernel": 3
+            }
+          },
+          {
+            "id": "preset1_4",
+            "kind": "morph_close",
+            "params": {
+              "kernel": 3
+            }
+          },
+          {
+            "id": "regions",
+            "kind": "cimg_components",
+            "params": {
+              "connectivity": "8",
+              "min_pixels": 300,
+              "max_pixels": 4200000,
+              "reject_border": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "confirmed",
+        "name": "Red + region agreement",
+        "parent_id": "preset0",
+        "fork_after": "preset0_5",
+        "rationale": "Overlap confirmation preserves primary measurements. This deliberately imperfect support misses one true red candy: compare the final mask with the primary detector.",
+        "operations": [
+          {
+            "id": "agreement",
+            "kind": "confirm",
+            "params": {
+              "pipeline_ids": "preset1",
+              "min_support": 1,
+              "iou": 0.3,
+              "match_text": false
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "qr-code",
+    "title": "Read a QR code · 2D",
+    "filename": "qr-code.png",
+    "path": "/examples/qr-code.png",
+    "source": "https://github.com/zxing-cpp/zxing-cpp/tree/v2.3.0",
+    "credit": "Generated test graphic using ZXing-C++ 2.3.0",
+    "workbench_only": true,
+    "description": "Read the QR code and report its text, format and visible bounds.",
+    "context": "Synthetic 2D fixture. Expected text: Contour sample 42. Compare direct color input with grayscale. This is an identity smoke test, not held-out validation.",
+    "labeled": false,
+    "boxes": [],
+    "pipelines": [
+      {
+        "id": "direct",
+        "name": "Direct code reader",
+        "parent_id": null,
+        "fork_after": null,
+        "rationale": "",
+        "operations": [
+          {
+            "id": "decode",
+            "kind": "barcode",
+            "params": {
+              "formats": "all",
+              "try_rotate": true,
+              "try_downscale": true,
+              "binarizer": "local_average"
+            }
+          }
+        ]
+      },
+      {
+        "id": "gray",
+        "name": "Grayscale code reader",
+        "parent_id": null,
+        "fork_after": null,
+        "rationale": "",
+        "operations": [
+          {
+            "id": "graycode",
+            "kind": "grayscale",
+            "params": {}
+          },
+          {
+            "id": "decodegray",
+            "kind": "barcode",
+            "params": {
+              "formats": "all",
+              "try_rotate": true,
+              "try_downscale": true,
+              "binarizer": "local_average"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "bright-local-detail",
+    "title": "Bright spots on a gradient · 2D",
+    "filename": "bright-local-detail.png",
+    "path": "/examples/bright-local-detail.png",
+    "source": "",
+    "credit": "Generated analytic development image · known geometry",
+    "description": "Detect the three small bright round spots across the gradient background.",
+    "context": "Constructed 2D teaching example, not held-out reliability evidence. Compare the global cutoff with local morphology. All three radius-6 spots have known locations.",
+    "labeled": true,
+    "boxes": [
+      {
+        "x": 0.1625,
+        "y": 0.4625,
+        "width": 0.05416666666666667,
+        "height": 0.08125
+      },
+      {
+        "x": 0.475,
+        "y": 0.4625,
+        "width": 0.05416666666666667,
+        "height": 0.08125
+      },
+      {
+        "x": 0.7875,
+        "y": 0.4625,
+        "width": 0.05416666666666667,
+        "height": 0.08125
+      }
+    ],
+    "workbench_only": true,
+    "pipelines": [
+      {
+        "id": "base",
+        "name": "Fixed global threshold",
+        "parent_id": null,
+        "fork_after": null,
+        "rationale": "A fixed global cutoff misses spots on the changing background.",
+        "operations": [
+          {
+            "id": "gray",
+            "kind": "grayscale",
+            "params": {}
+          },
+          {
+            "id": "fixed",
+            "kind": "threshold",
+            "params": {
+              "value": 150
+            }
+          },
+          {
+            "id": "base_detect",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.0003,
+              "max_area": 0.8,
+              "min_circularity": 0.0,
+              "min_solidity": 0.0,
+              "min_aspect": 1.0,
+              "max_aspect": 100.0,
+              "reject_border": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "hat",
+        "name": "Known-scale local detail",
+        "parent_id": "base",
+        "fork_after": "gray",
+        "rationale": "Remove slow background changes, then select the local spot contrast. The kernel must exceed the spot diameter.",
+        "operations": [
+          {
+            "id": "hat_step",
+            "kind": "top_hat",
+            "params": {
+              "kernel": 31
+            }
+          },
+          {
+            "id": "select",
+            "kind": "range_mask",
+            "params": {
+              "low": 20,
+              "high": 255
+            }
+          },
+          {
+            "id": "hat_detect",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.0003,
+              "max_area": 0.8,
+              "min_circularity": 0.0,
+              "min_solidity": 0.0,
+              "min_aspect": 1.0,
+              "max_aspect": 100.0,
+              "reject_border": true
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "dark-local-detail",
+    "title": "Dark spots on a gradient · 2D",
+    "filename": "dark-local-detail.png",
+    "path": "/examples/dark-local-detail.png",
+    "source": "",
+    "credit": "Generated analytic development image · known geometry",
+    "description": "Detect the three small dark round spots across the gradient background.",
+    "context": "Constructed 2D teaching example, not held-out reliability evidence. Compare the global cutoff with local morphology. All three radius-6 spots have known locations.",
+    "labeled": true,
+    "boxes": [
+      {
+        "x": 0.1625,
+        "y": 0.4625,
+        "width": 0.05416666666666667,
+        "height": 0.08125
+      },
+      {
+        "x": 0.475,
+        "y": 0.4625,
+        "width": 0.05416666666666667,
+        "height": 0.08125
+      },
+      {
+        "x": 0.7875,
+        "y": 0.4625,
+        "width": 0.05416666666666667,
+        "height": 0.08125
+      }
+    ],
+    "workbench_only": true,
+    "pipelines": [
+      {
+        "id": "base",
+        "name": "Fixed global threshold",
+        "parent_id": null,
+        "fork_after": null,
+        "rationale": "A fixed global cutoff misses spots on the changing background.",
+        "operations": [
+          {
+            "id": "gray",
+            "kind": "grayscale",
+            "params": {}
+          },
+          {
+            "id": "fixed",
+            "kind": "threshold",
+            "params": {
+              "value": 150
+            }
+          },
+          {
+            "id": "invert",
+            "kind": "invert",
+            "params": {}
+          },
+          {
+            "id": "base_detect",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.0003,
+              "max_area": 0.8,
+              "min_circularity": 0.0,
+              "min_solidity": 0.0,
+              "min_aspect": 1.0,
+              "max_aspect": 100.0,
+              "reject_border": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "hat",
+        "name": "Known-scale local detail",
+        "parent_id": "base",
+        "fork_after": "gray",
+        "rationale": "Remove slow background changes, then select the local spot contrast. The kernel must exceed the spot diameter.",
+        "operations": [
+          {
+            "id": "hat_step",
+            "kind": "black_hat",
+            "params": {
+              "kernel": 31
+            }
+          },
+          {
+            "id": "select",
+            "kind": "range_mask",
+            "params": {
+              "low": 20,
+              "high": 255
+            }
+          },
+          {
+            "id": "hat_detect",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.0003,
+              "max_area": 0.8,
+              "min_circularity": 0.0,
+              "min_solidity": 0.0,
+              "min_aspect": 1.0,
+              "max_aspect": 100.0,
+              "reject_border": true
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "circle-shape-confirmation",
+    "title": "Circles with rectangle confusers · 2D",
+    "filename": "circle-shape-confirmation.png",
+    "path": "/examples/circle-shape-confirmation.png",
+    "source": "",
+    "credit": "Generated analytic development image · known geometry",
+    "description": "Find the two filled circles. Ignore both rectangular outlines. Measure the fitted circle diameter.",
+    "context": "Constructed development example based on an observed rectangle false positive. Circle voting returns one extra object; contour confirmation removes it here. Agreement is not a probability of correctness or a promise for new shapes.",
+    "labeled": true,
+    "boxes": [
+      {
+        "x": 0.634375,
+        "y": 0.15833333333333333,
+        "width": 0.109375,
+        "height": 0.14583333333333334
+      },
+      {
+        "x": 0.234375,
+        "y": 0.7083333333333334,
+        "width": 0.096875,
+        "height": 0.12916666666666668
+      }
+    ],
+    "workbench_only": true,
+    "pipelines": [
+      {
+        "id": "main",
+        "name": "Circle voting",
+        "parent_id": null,
+        "fork_after": null,
+        "rationale": "Circle voting also proposes a circle inside the small rectangle. Inspect the fitted disk.",
+        "operations": [
+          {
+            "id": "grayscale",
+            "kind": "grayscale",
+            "params": {}
+          },
+          {
+            "id": "hough_circles",
+            "kind": "hough_circles",
+            "params": {
+              "min_distance": 45.0,
+              "edge_threshold": 100.0,
+              "votes": 10.0,
+              "min_radius": 10,
+              "max_radius": 28
+            }
+          }
+        ]
+      },
+      {
+        "id": "closed_shape",
+        "name": "Closed circular contour",
+        "parent_id": "main",
+        "fork_after": "grayscale",
+        "rationale": "Edges and a circularity filter supply a separate shape check.",
+        "operations": [
+          {
+            "id": "edge_support",
+            "kind": "canny",
+            "params": {
+              "low": 50,
+              "high": 150
+            }
+          },
+          {
+            "id": "shape_support",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.001,
+              "max_area": 0.1,
+              "min_circularity": 0.84,
+              "min_solidity": 0.0,
+              "min_aspect": 1.0,
+              "max_aspect": 1.25,
+              "reject_border": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "confirmed",
+        "name": "Circles with shape confirmation",
+        "parent_id": "main",
+        "fork_after": "hough_circles",
+        "rationale": "Keep fitted circles whose boxes overlap a sufficiently round contour. Primary dimensions are preserved.",
+        "operations": [
+          {
+            "id": "agreement",
+            "kind": "confirm",
+            "params": {
+              "pipeline_ids": "closed_shape",
+              "min_support": 1,
+              "iou": 0.5,
+              "match_text": false
+            }
+          }
+        ]
+      }
+    ]
+  }
+]

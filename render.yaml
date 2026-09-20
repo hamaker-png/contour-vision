@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: contour
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    envVars:
+      - key: CONTOUR_PUBLIC
+        value: "1"
+      - key: CONTOUR_MAX_ACTIVE_POSTS
+        value: "2"
+      - key: CONTOUR_POSTS_PER_MINUTE
+        value: "60"
+    # Render supplies PORT and RENDER_EXTERNAL_HOSTNAME automatically.
+    # Add exact custom domains to CONTOUR_ALLOWED_HOSTS in the dashboard.

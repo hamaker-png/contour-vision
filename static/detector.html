@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Contour — CPU Vision Workbench</title>
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/detector.css">
+  <script type="module" src="/static/detector.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="Contour home"><span class="brand-icon">⌗</span> contour<span class="brand-sub">VISION WORKBENCH</span></a>
+    <div class="top-actions"><span class="cpu-badge"><i></i> CPU only</span><button id="settings-button">Settings</button><button id="export-button" class="primary" disabled>Export C++ <span>↗</span></button></div>
+  </header>
+  <div class="intro"><div><div class="eyebrow">FROM EXAMPLES TO EXECUTABLE</div><h1>Build a detector. See how it works.</h1><p>Describe a simple object, compare the transforms, and take a small CPU detector with you.</p></div><div class="project-state"><span id="state-dot" class="dot"></span><span id="project-status">New experiment</span></div></div>
+  <nav class="steps" aria-label="Workflow"><span class="current"><b>01</b> Examples</span><span><b>02</b> Define & clarify</span><span><b>03</b> Test strategies</span><span><b>04</b> Export detector</span></nav>
+  <main class="workspace">
+    <aside class="left-panel">
+      <section class="section"><div class="section-heading"><h2>Image collection</h2><span id="image-count" class="counter">0 / 12</span></div><p class="help">A few clear examples. Include variation and images without your object.</p>
+        <button id="upload-button" class="dropzone"><span class="upload-icon">↑</span><strong>Add images</strong><span>Drop files here or browse</span><small>PNG, JPG, WebP · up to 8 MB each</small></button>
+        <input type="file" id="files" accept="image/png,image/jpeg,image/webp" multiple hidden>
+        <div class="example-line"><span>Start with a test case</span><select id="example-select" aria-label="Load example"><option value="">Choose example…</option></select></div>
+        <div id="sample-list" class="sample-list"></div>
+        <p id="example-source" class="help"></p>
+      </section>
+      <section class="section"><div class="section-heading"><h2>Detection brief</h2><span class="small-label">YOUR INTENT</span></div>
+        <label for="description">What should we detect?</label><textarea id="description" rows="3" placeholder="e.g. Green parts on a white background. Ignore the printed text."></textarea>
+        <label for="context">What can change?</label><textarea id="context" rows="2" placeholder="Lighting, rotation, background, similar objects…"></textarea>
+      </section>
+      <section class="section"><div class="section-heading"><h2>Extract information</h2><span class="small-label">PER OBJECT</span></div>
+        <div class="measure-grid">
+          <label><input type="checkbox" name="measure" value="length" checked> Length</label><label><input type="checkbox" name="measure" value="width" checked> Width</label>
+          <label><input type="checkbox" name="measure" value="area"> Area</label><label><input type="checkbox" name="measure" value="color" checked> Mean color</label>
+          <label><input type="checkbox" name="measure" value="angle"> Angle</label><label><input type="checkbox" name="measure" value="center"> Center</label>
+        </div><div class="calibration"><label for="scale">Scale calibration <span>optional</span></label><div class="input-row"><input id="scale" type="number" min="0" step="any" placeholder="Pixels per unit"><select id="unit" aria-label="Physical unit"><option>mm</option><option>cm</option><option>in</option></select></div><p class="help">No scale? Measurements stay in pixels. Use a known reference in the same plane.</p></div>
+      </section>
+    </aside>
+    <div class="main-panel">
+      <section class="viewer-section"><div class="viewer-toolbar"><div><h2 id="viewer-title">Image workspace</h2><span id="viewer-meta" class="help">Select an image to inspect or label</span></div><div class="toolbar-actions"><button id="label-button" disabled>Draw target boxes</button><button id="clear-boxes" disabled>Clear labels</button></div></div>
+        <div id="empty-view" class="empty-view"><div class="empty-frame"><span></span><i>+</i></div><h3>Give your detector something to see</h3><p>Add a few images, or load an example to explore<br>the transforms without an API key.</p></div>
+        <div id="image-view" class="image-view" hidden><canvas id="image-canvas" aria-label="Image preview. Enable draw mode and drag to label target objects."></canvas></div>
+        <div id="stage-tabs" class="stage-tabs" role="tablist" aria-label="Transform stage" hidden><button data-stage="input">Original</button><button data-stage="feature">Preprocess</button><button data-stage="threshold">Raw mask</button><button data-stage="cleaned">Clean mask</button><button data-stage="accepted">Filtered</button><button data-stage="detections" class="active">Detections</button></div>
+        <div id="image-controls" class="image-controls" hidden><label>Use for <select id="split"><option value="train">Training</option><option value="validation">Held-out validation</option></select></label><label><input id="labeled" type="checkbox"> All targets labeled <span id="box-count"></span></label><button id="remove-image" class="text-button">Remove image</button></div>
+        <div class="viewer-foot"><span id="viewer-hint">Tip: label every target, or mark an empty image as labeled to test false positives.</span><span id="image-size"></span></div>
+      </section>
+      <section class="results-section"><div class="section-heading"><div><div class="eyebrow">LOCAL EXPERIMENTS</div><h2>Strategy comparison</h2></div><button id="baseline-button">Try baseline strategies</button></div>
+        <p id="results-help" class="help">Real transforms, measured on your images. Label examples to compare precision and recall.</p>
+        <div id="strategy-list" class="strategy-list"></div>
+        <div id="results-empty" class="results-empty"><span>01 → 02 → 03</span><p>Your experiments will appear here.</p><small>Use AI to design image-specific strategies, or start with local baselines.</small></div>
+        <div id="result-detail" hidden>
+          <div class="metrics" id="metrics"></div><p id="strategy-rationale" class="help"></p><div id="measurements-table" class="table-wrap"></div>
+          <details class="parameters"><summary>Inspect & adjust parameters</summary><textarea id="parameters-json" rows="12" spellcheck="false" aria-label="Strategy parameters JSON"></textarea><button id="rerun-button">Apply & rerun</button></details>
+        </div>
+      </section>
+    </div>
+    <aside class="assistant-panel"><div class="assistant-heading"><div><span class="assistant-icon">✳</span><h2>Vision assistant</h2></div><span class="small-label">OPENAI</span></div>
+      <div id="conversation" class="conversation"><div class="assistant-message"><span class="message-label">HOW IT WORKS</span><p>I’ll look at your examples and help identify the features that matter.</p><p>Then we’ll test a few simple techniques and see which ones make your object stand out.</p><div class="callout">AI designs the pipeline.<br>Your CPU runs the detector.</div></div></div>
+      <div class="assistant-composer"><label for="answers">Answers & additional context</label><textarea id="answers" rows="3" placeholder="Answer the assistant’s questions here…"></textarea><div class="ai-actions"><button id="analyze-button" class="primary">Analyze images <span>↗</span></button><button id="plan-button" disabled>Generate & test strategies</button><button id="review-button" disabled>Review transform results</button></div><p class="help">AI actions send training images to OpenAI using your key. Validation images stay local.</p></div>
+    </aside>
+  </main>
+  <footer><span><i class="dot"></i> Local workspace <span class="footer-divider">/</span> OpenCV · one CPU thread</span><span id="footer-status">No images leave this machine until you run an AI action.</span></footer>
+  <div id="notification" class="notification" role="status" hidden></div>
+  <dialog id="settings-dialog"><form id="settings-form"><div class="dialog-heading"><h2>AI connection</h2><button type="button" id="close-settings" aria-label="Close settings">×</button></div><p class="help">Your key is held only in this page’s memory. It is never saved to disk or included in exports.</p><label for="api-key">OpenAI API key</label><input id="api-key" type="password" autocomplete="off" placeholder="sk-…"><label for="model">Vision model</label><input id="model" value="gpt-4.1" placeholder="Model ID"><p class="help">Choose an available model with image input and structured output support.</p><div class="dialog-actions"><button type="button" id="forget-key">Forget key</button><button type="submit" class="primary">Use settings</button></div><p id="server-key-status" class="help"></p></form></dialog>
+</body>
+</html>

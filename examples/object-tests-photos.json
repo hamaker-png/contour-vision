@@ -1,0 +1,1341 @@
+[
+  {
+    "id": "object-red-candies",
+    "title": "Red candies · photo",
+    "filename": "object-tests/photo-red-candies-base.png",
+    "path": "/examples/object-tests/photo-red-candies-base.png",
+    "source": "https://github.com/opencv/opencv/blob/4.x/samples/data/smarties.png",
+    "credit": "OpenCV sample image",
+    "description": "Detect the four red candies. Ignore orange, green, blue, and brown candies.",
+    "context": "A simple photograph with a white background. Measure the visible length, width, and mean color. Do not count clipped candies at the image edge. Offline teaching set: base photograph, 180-degree derived rotation, and empty background negative. The two positive images are the same capture, not independent validation. All examples are labeled training data; compare the weaker alternative branches too.",
+    "labeled": true,
+    "boxes": [
+      {
+        "x": 0.0145,
+        "y": 0.5646,
+        "width": 0.1332,
+        "height": 0.1601
+      },
+      {
+        "x": 0.1695,
+        "y": 0.6433,
+        "width": 0.1404,
+        "height": 0.1713
+      },
+      {
+        "x": 0.6247,
+        "y": 0.5197,
+        "width": 0.1453,
+        "height": 0.1573
+      },
+      {
+        "x": 0.4576,
+        "y": 0.7697,
+        "width": 0.1501,
+        "height": 0.1826
+      }
+    ],
+    "workbench_only": true,
+    "collection": "object-tests",
+    "category": "Object tests · photos",
+    "samples": [
+      {
+        "id": "red-candies-base",
+        "name": "Red candies · base",
+        "filename": "object-tests/photo-red-candies-base.png",
+        "path": "/examples/object-tests/photo-red-candies-base.png",
+        "split": "train",
+        "labeled": true,
+        "boxes": [
+          {
+            "x": 0.0145,
+            "y": 0.5646,
+            "width": 0.1332,
+            "height": 0.1601
+          },
+          {
+            "x": 0.1695,
+            "y": 0.6433,
+            "width": 0.1404,
+            "height": 0.1713
+          },
+          {
+            "x": 0.6247,
+            "y": 0.5197,
+            "width": 0.1453,
+            "height": 0.1573
+          },
+          {
+            "x": 0.4576,
+            "y": 0.7697,
+            "width": 0.1501,
+            "height": 0.1826
+          }
+        ],
+        "expected_count": 4
+      },
+      {
+        "id": "red-candies-rotated",
+        "name": "Red candies · rotated",
+        "filename": "object-tests/photo-red-candies-rotated.png",
+        "path": "/examples/object-tests/photo-red-candies-rotated.png",
+        "split": "train",
+        "labeled": true,
+        "boxes": [
+          {
+            "x": 0.8523000000000001,
+            "y": 0.2753,
+            "width": 0.1332,
+            "height": 0.1601
+          },
+          {
+            "x": 0.6901,
+            "y": 0.1854,
+            "width": 0.1404,
+            "height": 0.1713
+          },
+          {
+            "x": 0.22999999999999995,
+            "y": 0.32299999999999995,
+            "width": 0.1453,
+            "height": 0.1573
+          },
+          {
+            "x": 0.3923,
+            "y": 0.04769999999999994,
+            "width": 0.1501,
+            "height": 0.1826
+          }
+        ],
+        "expected_count": 4
+      },
+      {
+        "id": "red-candies-negative",
+        "name": "Red candies · negative",
+        "filename": "object-tests/photo-red-candies-negative.png",
+        "path": "/examples/object-tests/photo-red-candies-negative.png",
+        "split": "train",
+        "labeled": true,
+        "boxes": [],
+        "expected_count": 0
+      }
+    ],
+    "recommended_timeline_id": "preset0",
+    "suggested_measurements": [
+      "length",
+      "width",
+      "area",
+      "color",
+      "center"
+    ],
+    "pipelines": [
+      {
+        "id": "preset0",
+        "name": "Red hue + contours",
+        "parent_id": null,
+        "fork_after": null,
+        "rationale": "Red wraps around the HSV hue boundary. A circularity filter removes thin color artifacts.",
+        "operations": [
+          {
+            "id": "preset0_0",
+            "kind": "resize",
+            "params": {
+              "max_side": 1280
+            }
+          },
+          {
+            "id": "preset0_1",
+            "kind": "gaussian_blur",
+            "params": {
+              "kernel": 3
+            }
+          },
+          {
+            "id": "preset0_2",
+            "kind": "hsv_mask",
+            "params": {
+              "hue_low": 170,
+              "hue_high": 7,
+              "saturation_low": 120,
+              "saturation_high": 255,
+              "value_low": 65,
+              "value_high": 255
+            }
+          },
+          {
+            "id": "preset0_3",
+            "kind": "morph_open",
+            "params": {
+              "kernel": 3
+            }
+          },
+          {
+            "id": "preset0_4",
+            "kind": "morph_close",
+            "params": {
+              "kernel": 3
+            }
+          },
+          {
+            "id": "preset0_5",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.004,
+              "max_area": 0.85,
+              "min_circularity": 0.65,
+              "min_solidity": 0.0,
+              "min_aspect": 1.0,
+              "max_aspect": 100.0,
+              "reject_border": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "preset1",
+        "name": "Dark foreground",
+        "parent_id": "preset0",
+        "fork_after": "preset0_1",
+        "rationale": "A grayscale baseline may find candies, but cannot reliably separate red from other dark colors.",
+        "operations": [
+          {
+            "id": "preset1_0",
+            "kind": "grayscale",
+            "params": {}
+          },
+          {
+            "id": "preset1_1",
+            "kind": "otsu",
+            "params": {}
+          },
+          {
+            "id": "preset1_2",
+            "kind": "invert",
+            "params": {}
+          },
+          {
+            "id": "preset1_3",
+            "kind": "morph_open",
+            "params": {
+              "kernel": 3
+            }
+          },
+          {
+            "id": "preset1_4",
+            "kind": "morph_close",
+            "params": {
+              "kernel": 3
+            }
+          },
+          {
+            "id": "preset1_5",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.004,
+              "max_area": 0.85,
+              "min_circularity": 0.0,
+              "min_solidity": 0.0,
+              "min_aspect": 1.0,
+              "max_aspect": 100.0,
+              "reject_border": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "preset2",
+        "name": "Edge contours",
+        "parent_id": "preset0",
+        "fork_after": "preset0_1",
+        "rationale": "A shape-only baseline should reveal boundaries but may also include other colors.",
+        "operations": [
+          {
+            "id": "preset2_0",
+            "kind": "grayscale",
+            "params": {}
+          },
+          {
+            "id": "preset2_1",
+            "kind": "canny",
+            "params": {
+              "low": 50,
+              "high": 150
+            }
+          },
+          {
+            "id": "preset2_2",
+            "kind": "morph_close",
+            "params": {
+              "kernel": 5
+            }
+          },
+          {
+            "id": "preset2_3",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.004,
+              "max_area": 0.85,
+              "min_circularity": 0.0,
+              "min_solidity": 0.0,
+              "min_aspect": 1.0,
+              "max_aspect": 100.0,
+              "reject_border": true
+            }
+          }
+        ]
+      }
+    ],
+    "expected": {
+      "recommended_timeline_id": "preset0",
+      "counts": [
+        4,
+        4,
+        0
+      ]
+    }
+  },
+  {
+    "id": "object-coins",
+    "title": "Coins · photo",
+    "filename": "object-tests/photo-coins-base.png",
+    "path": "/examples/object-tests/photo-coins-base.png",
+    "source": "https://scikit-image.org/docs/stable/api/skimage.data.html#skimage.data.coins",
+    "credit": "Brooklyn Museum / scikit-image · no known copyright restrictions",
+    "description": "Detect all 24 separate coins on the gray background.",
+    "context": "Grayscale photo with uneven brightness and textured coins. A harder comparison for simple thresholding. Shapes are roughly circular. Offline teaching set: base photograph, 180-degree derived rotation, and empty background negative. The two positive images are the same capture, not independent validation. All examples are labeled training data; compare the weaker alternative branches too.",
+    "labeled": true,
+    "boxes": [
+      {
+        "x": 0.0547,
+        "y": 0.1089,
+        "width": 0.1276,
+        "height": 0.1452
+      },
+      {
+        "x": 0.2109,
+        "y": 0.1221,
+        "width": 0.1094,
+        "height": 0.1287
+      },
+      {
+        "x": 0.3359,
+        "y": 0.0858,
+        "width": 0.1354,
+        "height": 0.165
+      },
+      {
+        "x": 0.5026,
+        "y": 0.0891,
+        "width": 0.1328,
+        "height": 0.1716
+      },
+      {
+        "x": 0.6667,
+        "y": 0.1056,
+        "width": 0.1094,
+        "height": 0.1386
+      },
+      {
+        "x": 0.7943,
+        "y": 0.0429,
+        "width": 0.1641,
+        "height": 0.2013
+      },
+      {
+        "x": 0.0547,
+        "y": 0.3333,
+        "width": 0.1224,
+        "height": 0.1551
+      },
+      {
+        "x": 0.2135,
+        "y": 0.3465,
+        "width": 0.112,
+        "height": 0.1485
+      },
+      {
+        "x": 0.349,
+        "y": 0.3498,
+        "width": 0.1094,
+        "height": 0.1386
+      },
+      {
+        "x": 0.4792,
+        "y": 0.3366,
+        "width": 0.1198,
+        "height": 0.1518
+      },
+      {
+        "x": 0.6484,
+        "y": 0.3036,
+        "width": 0.1302,
+        "height": 0.1782
+      },
+      {
+        "x": 0.8255,
+        "y": 0.3399,
+        "width": 0.1094,
+        "height": 0.1518
+      },
+      {
+        "x": 0.0599,
+        "y": 0.5611,
+        "width": 0.1276,
+        "height": 0.1584
+      },
+      {
+        "x": 0.2083,
+        "y": 0.5842,
+        "width": 0.1224,
+        "height": 0.1419
+      },
+      {
+        "x": 0.349,
+        "y": 0.5644,
+        "width": 0.1146,
+        "height": 0.165
+      },
+      {
+        "x": 0.4869,
+        "y": 0.5512,
+        "width": 0.1354,
+        "height": 0.1749
+      },
+      {
+        "x": 0.651,
+        "y": 0.5545,
+        "width": 0.1276,
+        "height": 0.165
+      },
+      {
+        "x": 0.8177,
+        "y": 0.5017,
+        "width": 0.1797,
+        "height": 0.2277
+      },
+      {
+        "x": 0.0365,
+        "y": 0.7558,
+        "width": 0.1667,
+        "height": 0.2112
+      },
+      {
+        "x": 0.2292,
+        "y": 0.8119,
+        "width": 0.1354,
+        "height": 0.1617
+      },
+      {
+        "x": 0.375,
+        "y": 0.7723,
+        "width": 0.1589,
+        "height": 0.1848
+      },
+      {
+        "x": 0.5521,
+        "y": 0.7624,
+        "width": 0.1667,
+        "height": 0.2178
+      },
+      {
+        "x": 0.7292,
+        "y": 0.7888,
+        "width": 0.1302,
+        "height": 0.1749
+      },
+      {
+        "x": 0.8802,
+        "y": 0.8053,
+        "width": 0.1198,
+        "height": 0.1815
+      }
+    ],
+    "workbench_only": true,
+    "collection": "object-tests",
+    "category": "Object tests · photos",
+    "samples": [
+      {
+        "id": "coins-base",
+        "name": "Coins · base",
+        "filename": "object-tests/photo-coins-base.png",
+        "path": "/examples/object-tests/photo-coins-base.png",
+        "split": "train",
+        "labeled": true,
+        "boxes": [
+          {
+            "x": 0.0547,
+            "y": 0.1089,
+            "width": 0.1276,
+            "height": 0.1452
+          },
+          {
+            "x": 0.2109,
+            "y": 0.1221,
+            "width": 0.1094,
+            "height": 0.1287
+          },
+          {
+            "x": 0.3359,
+            "y": 0.0858,
+            "width": 0.1354,
+            "height": 0.165
+          },
+          {
+            "x": 0.5026,
+            "y": 0.0891,
+            "width": 0.1328,
+            "height": 0.1716
+          },
+          {
+            "x": 0.6667,
+            "y": 0.1056,
+            "width": 0.1094,
+            "height": 0.1386
+          },
+          {
+            "x": 0.7943,
+            "y": 0.0429,
+            "width": 0.1641,
+            "height": 0.2013
+          },
+          {
+            "x": 0.0547,
+            "y": 0.3333,
+            "width": 0.1224,
+            "height": 0.1551
+          },
+          {
+            "x": 0.2135,
+            "y": 0.3465,
+            "width": 0.112,
+            "height": 0.1485
+          },
+          {
+            "x": 0.349,
+            "y": 0.3498,
+            "width": 0.1094,
+            "height": 0.1386
+          },
+          {
+            "x": 0.4792,
+            "y": 0.3366,
+            "width": 0.1198,
+            "height": 0.1518
+          },
+          {
+            "x": 0.6484,
+            "y": 0.3036,
+            "width": 0.1302,
+            "height": 0.1782
+          },
+          {
+            "x": 0.8255,
+            "y": 0.3399,
+            "width": 0.1094,
+            "height": 0.1518
+          },
+          {
+            "x": 0.0599,
+            "y": 0.5611,
+            "width": 0.1276,
+            "height": 0.1584
+          },
+          {
+            "x": 0.2083,
+            "y": 0.5842,
+            "width": 0.1224,
+            "height": 0.1419
+          },
+          {
+            "x": 0.349,
+            "y": 0.5644,
+            "width": 0.1146,
+            "height": 0.165
+          },
+          {
+            "x": 0.4869,
+            "y": 0.5512,
+            "width": 0.1354,
+            "height": 0.1749
+          },
+          {
+            "x": 0.651,
+            "y": 0.5545,
+            "width": 0.1276,
+            "height": 0.165
+          },
+          {
+            "x": 0.8177,
+            "y": 0.5017,
+            "width": 0.1797,
+            "height": 0.2277
+          },
+          {
+            "x": 0.0365,
+            "y": 0.7558,
+            "width": 0.1667,
+            "height": 0.2112
+          },
+          {
+            "x": 0.2292,
+            "y": 0.8119,
+            "width": 0.1354,
+            "height": 0.1617
+          },
+          {
+            "x": 0.375,
+            "y": 0.7723,
+            "width": 0.1589,
+            "height": 0.1848
+          },
+          {
+            "x": 0.5521,
+            "y": 0.7624,
+            "width": 0.1667,
+            "height": 0.2178
+          },
+          {
+            "x": 0.7292,
+            "y": 0.7888,
+            "width": 0.1302,
+            "height": 0.1749
+          },
+          {
+            "x": 0.8802,
+            "y": 0.8053,
+            "width": 0.1198,
+            "height": 0.1815
+          }
+        ],
+        "expected_count": 24
+      },
+      {
+        "id": "coins-rotated",
+        "name": "Coins · rotated",
+        "filename": "object-tests/photo-coins-rotated.png",
+        "path": "/examples/object-tests/photo-coins-rotated.png",
+        "split": "train",
+        "labeled": true,
+        "boxes": [
+          {
+            "x": 0.8177000000000001,
+            "y": 0.7459,
+            "width": 0.1276,
+            "height": 0.1452
+          },
+          {
+            "x": 0.6797,
+            "y": 0.7492,
+            "width": 0.1094,
+            "height": 0.1287
+          },
+          {
+            "x": 0.5287000000000001,
+            "y": 0.7492,
+            "width": 0.1354,
+            "height": 0.165
+          },
+          {
+            "x": 0.3645999999999999,
+            "y": 0.7393000000000001,
+            "width": 0.1328,
+            "height": 0.1716
+          },
+          {
+            "x": 0.22390000000000004,
+            "y": 0.7558,
+            "width": 0.1094,
+            "height": 0.1386
+          },
+          {
+            "x": 0.0416,
+            "y": 0.7557999999999999,
+            "width": 0.1641,
+            "height": 0.2013
+          },
+          {
+            "x": 0.8229000000000001,
+            "y": 0.5116,
+            "width": 0.1224,
+            "height": 0.1551
+          },
+          {
+            "x": 0.6745,
+            "y": 0.505,
+            "width": 0.112,
+            "height": 0.1485
+          },
+          {
+            "x": 0.5416000000000001,
+            "y": 0.5116,
+            "width": 0.1094,
+            "height": 0.1386
+          },
+          {
+            "x": 0.4009999999999999,
+            "y": 0.5116,
+            "width": 0.1198,
+            "height": 0.1518
+          },
+          {
+            "x": 0.2214,
+            "y": 0.5182,
+            "width": 0.1302,
+            "height": 0.1782
+          },
+          {
+            "x": 0.06509999999999999,
+            "y": 0.5083,
+            "width": 0.1094,
+            "height": 0.1518
+          },
+          {
+            "x": 0.8125,
+            "y": 0.28049999999999997,
+            "width": 0.1276,
+            "height": 0.1584
+          },
+          {
+            "x": 0.6693,
+            "y": 0.2738999999999999,
+            "width": 0.1224,
+            "height": 0.1419
+          },
+          {
+            "x": 0.5364,
+            "y": 0.27059999999999995,
+            "width": 0.1146,
+            "height": 0.165
+          },
+          {
+            "x": 0.37770000000000004,
+            "y": 0.2739,
+            "width": 0.1354,
+            "height": 0.1749
+          },
+          {
+            "x": 0.22139999999999999,
+            "y": 0.28049999999999997,
+            "width": 0.1276,
+            "height": 0.165
+          },
+          {
+            "x": 0.002600000000000019,
+            "y": 0.27059999999999995,
+            "width": 0.1797,
+            "height": 0.2277
+          },
+          {
+            "x": 0.7968000000000001,
+            "y": 0.032999999999999974,
+            "width": 0.1667,
+            "height": 0.2112
+          },
+          {
+            "x": 0.6354000000000001,
+            "y": 0.026400000000000035,
+            "width": 0.1354,
+            "height": 0.1617
+          },
+          {
+            "x": 0.46609999999999996,
+            "y": 0.04290000000000002,
+            "width": 0.1589,
+            "height": 0.1848
+          },
+          {
+            "x": 0.2812,
+            "y": 0.01980000000000004,
+            "width": 0.1667,
+            "height": 0.2178
+          },
+          {
+            "x": 0.14060000000000003,
+            "y": 0.036300000000000054,
+            "width": 0.1302,
+            "height": 0.1749
+          },
+          {
+            "x": 1.3877787807814457e-17,
+            "y": 0.01319999999999999,
+            "width": 0.1198,
+            "height": 0.1815
+          }
+        ],
+        "expected_count": 24
+      },
+      {
+        "id": "coins-negative",
+        "name": "Coins · negative",
+        "filename": "object-tests/photo-coins-negative.png",
+        "path": "/examples/object-tests/photo-coins-negative.png",
+        "split": "train",
+        "labeled": true,
+        "boxes": [],
+        "expected_count": 0
+      }
+    ],
+    "recommended_timeline_id": "preset2",
+    "suggested_measurements": [
+      "length",
+      "width",
+      "area",
+      "color",
+      "center"
+    ],
+    "pipelines": [
+      {
+        "id": "preset0",
+        "name": "Coin edge contours",
+        "parent_id": null,
+        "fork_after": null,
+        "rationale": "Closed coin boundaries can separate objects even when coin and background intensities overlap.",
+        "operations": [
+          {
+            "id": "preset0_0",
+            "kind": "resize",
+            "params": {
+              "max_side": 1280
+            }
+          },
+          {
+            "id": "preset0_1",
+            "kind": "gaussian_blur",
+            "params": {
+              "kernel": 3
+            }
+          },
+          {
+            "id": "preset0_2",
+            "kind": "grayscale",
+            "params": {}
+          },
+          {
+            "id": "preset0_3",
+            "kind": "canny",
+            "params": {
+              "low": 40,
+              "high": 100
+            }
+          },
+          {
+            "id": "preset0_4",
+            "kind": "morph_close",
+            "params": {
+              "kernel": 3
+            }
+          },
+          {
+            "id": "preset0_5",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.004,
+              "max_area": 0.12,
+              "min_circularity": 0.6,
+              "min_solidity": 0.0,
+              "min_aspect": 1.0,
+              "max_aspect": 100.0,
+              "reject_border": false
+            }
+          }
+        ]
+      },
+      {
+        "id": "preset1",
+        "name": "Bright coins",
+        "parent_id": "preset0",
+        "fork_after": "preset0_1",
+        "rationale": "Global thresholding is a fast baseline but may merge coins into the bright background.",
+        "operations": [
+          {
+            "id": "preset1_0",
+            "kind": "grayscale",
+            "params": {}
+          },
+          {
+            "id": "preset1_1",
+            "kind": "otsu",
+            "params": {}
+          },
+          {
+            "id": "preset1_2",
+            "kind": "morph_open",
+            "params": {
+              "kernel": 3
+            }
+          },
+          {
+            "id": "preset1_3",
+            "kind": "morph_close",
+            "params": {
+              "kernel": 3
+            }
+          },
+          {
+            "id": "preset1_4",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.004,
+              "max_area": 0.12,
+              "min_circularity": 0.0,
+              "min_solidity": 0.0,
+              "min_aspect": 1.0,
+              "max_aspect": 100.0,
+              "reject_border": false
+            }
+          }
+        ]
+      },
+      {
+        "id": "preset2",
+        "name": "Local bright coins",
+        "parent_id": "preset0",
+        "fork_after": "preset0_1",
+        "rationale": "A local threshold compensates for some background brightness variation.",
+        "operations": [
+          {
+            "id": "preset2_0",
+            "kind": "grayscale",
+            "params": {}
+          },
+          {
+            "id": "preset2_1",
+            "kind": "adaptive_threshold",
+            "params": {
+              "block_size": 51,
+              "constant": -8.0
+            }
+          },
+          {
+            "id": "preset2_2",
+            "kind": "morph_open",
+            "params": {
+              "kernel": 3
+            }
+          },
+          {
+            "id": "preset2_3",
+            "kind": "morph_close",
+            "params": {
+              "kernel": 3
+            }
+          },
+          {
+            "id": "preset2_4",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.004,
+              "max_area": 0.12,
+              "min_circularity": 0.0,
+              "min_solidity": 0.0,
+              "min_aspect": 1.0,
+              "max_aspect": 100.0,
+              "reject_border": false
+            }
+          }
+        ]
+      }
+    ],
+    "expected": {
+      "recommended_timeline_id": "preset2",
+      "counts": [
+        24,
+        24,
+        0
+      ]
+    }
+  },
+  {
+    "id": "object-red-apple",
+    "title": "Red apple · photo",
+    "filename": "object-tests/photo-red-apple-base.png",
+    "path": "/examples/object-tests/photo-red-apple-base.png",
+    "source": "https://commons.wikimedia.org/wiki/File:Red_Apple.jpg",
+    "credit": "Abhijit Tembhekar · CC BY 2.0",
+    "description": "Detect the single red apple, including its yellow-red body. Ignore the cast shadow.",
+    "context": "Independent photograph. Specular highlights and yellow skin test incomplete color masks. Report visible dimensions in pixels; there is no physical calibration. Offline teaching set: base photograph, 180-degree derived rotation, and empty background negative. The two positive images are the same capture, not independent validation. All examples are labeled training data; compare the weaker alternative branches too.",
+    "labeled": true,
+    "boxes": [
+      {
+        "x": 0.104,
+        "y": 0.107,
+        "width": 0.78,
+        "height": 0.832
+      }
+    ],
+    "workbench_only": true,
+    "collection": "object-tests",
+    "category": "Object tests · photos",
+    "samples": [
+      {
+        "id": "red-apple-base",
+        "name": "Red apple · base",
+        "filename": "object-tests/photo-red-apple-base.png",
+        "path": "/examples/object-tests/photo-red-apple-base.png",
+        "split": "train",
+        "labeled": true,
+        "boxes": [
+          {
+            "x": 0.104,
+            "y": 0.107,
+            "width": 0.78,
+            "height": 0.832
+          }
+        ],
+        "expected_count": 1
+      },
+      {
+        "id": "red-apple-rotated",
+        "name": "Red apple · rotated",
+        "filename": "object-tests/photo-red-apple-rotated.png",
+        "path": "/examples/object-tests/photo-red-apple-rotated.png",
+        "split": "train",
+        "labeled": true,
+        "boxes": [
+          {
+            "x": 0.11599999999999999,
+            "y": 0.061000000000000054,
+            "width": 0.78,
+            "height": 0.832
+          }
+        ],
+        "expected_count": 1
+      },
+      {
+        "id": "red-apple-negative",
+        "name": "Red apple · negative",
+        "filename": "object-tests/photo-red-apple-negative.png",
+        "path": "/examples/object-tests/photo-red-apple-negative.png",
+        "split": "train",
+        "labeled": true,
+        "boxes": [],
+        "expected_count": 0
+      }
+    ],
+    "recommended_timeline_id": "preset0",
+    "suggested_measurements": [
+      "length",
+      "width",
+      "area",
+      "color",
+      "center"
+    ],
+    "pipelines": [
+      {
+        "id": "preset0",
+        "name": "Red apple hue",
+        "parent_id": null,
+        "fork_after": null,
+        "rationale": "Red and orange skin should isolate much of the apple; inspect missing yellow regions and highlights.",
+        "operations": [
+          {
+            "id": "preset0_0",
+            "kind": "resize",
+            "params": {
+              "max_side": 1280
+            }
+          },
+          {
+            "id": "preset0_1",
+            "kind": "gaussian_blur",
+            "params": {
+              "kernel": 3
+            }
+          },
+          {
+            "id": "preset0_2",
+            "kind": "hsv_mask",
+            "params": {
+              "hue_low": 170,
+              "hue_high": 15,
+              "saturation_low": 55,
+              "saturation_high": 255,
+              "value_low": 35,
+              "value_high": 255
+            }
+          },
+          {
+            "id": "preset0_3",
+            "kind": "morph_open",
+            "params": {
+              "kernel": 5
+            }
+          },
+          {
+            "id": "preset0_4",
+            "kind": "morph_close",
+            "params": {
+              "kernel": 5
+            }
+          },
+          {
+            "id": "preset0_5",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.05,
+              "max_area": 0.95,
+              "min_circularity": 0.0,
+              "min_solidity": 0.0,
+              "min_aspect": 1.0,
+              "max_aspect": 100.0,
+              "reject_border": true
+            }
+          }
+        ]
+      },
+      {
+        "id": "preset1",
+        "name": "Apple silhouette",
+        "parent_id": "preset0",
+        "fork_after": "preset0_1",
+        "rationale": "Brightness may recover more of the body but could include its shadow.",
+        "operations": [
+          {
+            "id": "preset1_0",
+            "kind": "grayscale",
+            "params": {}
+          },
+          {
+            "id": "preset1_1",
+            "kind": "otsu",
+            "params": {}
+          },
+          {
+            "id": "preset1_2",
+            "kind": "invert",
+            "params": {}
+          },
+          {
+            "id": "preset1_3",
+            "kind": "morph_open",
+            "params": {
+              "kernel": 3
+            }
+          },
+          {
+            "id": "preset1_4",
+            "kind": "morph_close",
+            "params": {
+              "kernel": 3
+            }
+          },
+          {
+            "id": "preset1_5",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.05,
+              "max_area": 0.95,
+              "min_circularity": 0.0,
+              "min_solidity": 0.0,
+              "min_aspect": 1.0,
+              "max_aspect": 100.0,
+              "reject_border": true
+            }
+          }
+        ]
+      }
+    ],
+    "expected": {
+      "recommended_timeline_id": "preset0",
+      "counts": [
+        1,
+        1,
+        0
+      ]
+    }
+  },
+  {
+    "id": "object-tennis-ball",
+    "title": "Tennis ball · photo",
+    "filename": "object-tests/photo-tennis-ball-base.png",
+    "path": "/examples/object-tests/photo-tennis-ball-base.png",
+    "source": "https://commons.wikimedia.org/wiki/File:Tennisball2.png",
+    "credit": "KS / Christian VisualBeo Horvat · CC BY-SA 3.0",
+    "description": "Detect the large foreground yellow-green tennis ball. Ignore the partial distant ball at the upper left.",
+    "context": "A textured sphere with printed lettering, pale seams and edge artifacts. The main ball nearly fills the frame. Bounding-box matching alone does not validate accurate segmentation or physical size. Offline teaching set: base photograph, 180-degree derived rotation, and empty background negative. The two positive images are the same capture, not independent validation. All examples are labeled training data; compare the weaker alternative branches too.",
+    "labeled": true,
+    "boxes": [
+      {
+        "x": 0.002,
+        "y": 0.002,
+        "width": 0.995,
+        "height": 0.995
+      }
+    ],
+    "workbench_only": true,
+    "collection": "object-tests",
+    "category": "Object tests · photos",
+    "samples": [
+      {
+        "id": "tennis-ball-base",
+        "name": "Tennis ball · base",
+        "filename": "object-tests/photo-tennis-ball-base.png",
+        "path": "/examples/object-tests/photo-tennis-ball-base.png",
+        "split": "train",
+        "labeled": true,
+        "boxes": [
+          {
+            "x": 0.002,
+            "y": 0.002,
+            "width": 0.995,
+            "height": 0.995
+          }
+        ],
+        "expected_count": 1
+      },
+      {
+        "id": "tennis-ball-rotated",
+        "name": "Tennis ball · rotated",
+        "filename": "object-tests/photo-tennis-ball-rotated.png",
+        "path": "/examples/object-tests/photo-tennis-ball-rotated.png",
+        "split": "train",
+        "labeled": true,
+        "boxes": [
+          {
+            "x": 0.0030000000000000027,
+            "y": 0.0030000000000000027,
+            "width": 0.995,
+            "height": 0.995
+          }
+        ],
+        "expected_count": 1
+      },
+      {
+        "id": "tennis-ball-negative",
+        "name": "Tennis ball · negative",
+        "filename": "object-tests/photo-tennis-ball-negative.png",
+        "path": "/examples/object-tests/photo-tennis-ball-negative.png",
+        "split": "train",
+        "labeled": true,
+        "boxes": [],
+        "expected_count": 0
+      }
+    ],
+    "recommended_timeline_id": "preset0",
+    "suggested_measurements": [
+      "length",
+      "width",
+      "area",
+      "color",
+      "center"
+    ],
+    "pipelines": [
+      {
+        "id": "preset0",
+        "name": "Yellow-green ball mask",
+        "parent_id": null,
+        "fork_after": null,
+        "rationale": "Color selects the ball surface. Large-area filtering may reject the partial background ball.",
+        "operations": [
+          {
+            "id": "preset0_0",
+            "kind": "resize",
+            "params": {
+              "max_side": 1280
+            }
+          },
+          {
+            "id": "preset0_1",
+            "kind": "gaussian_blur",
+            "params": {
+              "kernel": 3
+            }
+          },
+          {
+            "id": "preset0_2",
+            "kind": "hsv_mask",
+            "params": {
+              "hue_low": 20,
+              "hue_high": 50,
+              "saturation_low": 65,
+              "saturation_high": 255,
+              "value_low": 40,
+              "value_high": 255
+            }
+          },
+          {
+            "id": "preset0_3",
+            "kind": "morph_open",
+            "params": {
+              "kernel": 5
+            }
+          },
+          {
+            "id": "preset0_4",
+            "kind": "morph_close",
+            "params": {
+              "kernel": 5
+            }
+          },
+          {
+            "id": "preset0_5",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.15,
+              "max_area": 1.0,
+              "min_circularity": 0.0,
+              "min_solidity": 0.0,
+              "min_aspect": 1.0,
+              "max_aspect": 100.0,
+              "reject_border": false
+            }
+          }
+        ]
+      },
+      {
+        "id": "preset1",
+        "name": "Ball brightness baseline",
+        "parent_id": "preset0",
+        "fork_after": "preset0_1",
+        "rationale": "Brightness is a weak baseline because the background and ball overlap in intensity.",
+        "operations": [
+          {
+            "id": "preset1_0",
+            "kind": "grayscale",
+            "params": {}
+          },
+          {
+            "id": "preset1_1",
+            "kind": "otsu",
+            "params": {}
+          },
+          {
+            "id": "preset1_2",
+            "kind": "morph_open",
+            "params": {
+              "kernel": 3
+            }
+          },
+          {
+            "id": "preset1_3",
+            "kind": "morph_close",
+            "params": {
+              "kernel": 3
+            }
+          },
+          {
+            "id": "preset1_4",
+            "kind": "contours",
+            "params": {
+              "min_area": 0.15,
+              "max_area": 1.0,
+              "min_circularity": 0.0,
+              "min_solidity": 0.0,
+              "min_aspect": 1.0,
+              "max_aspect": 100.0,
+              "reject_border": false
+            }
+          }
+        ]
+      }
+    ],
+    "expected": {
+      "recommended_timeline_id": "preset0",
+      "counts": [
+        1,
+        1,
+        0
+      ]
+    }
+  }
+]

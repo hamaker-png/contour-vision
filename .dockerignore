@@ -1,0 +1,18 @@
+# Allowlist only source and public teaching fixtures; no keys or local artifacts.
+**
+!Dockerfile
+!requirements-production.txt
+!backend/
+!backend/**
+!static/
+!static/**
+!examples/
+!examples/**
+**/__pycache__/
+**/*.pyc
+backend/vendor/bin/
+**/.env
+**/.env.*
+**/.local/
+**/settings.json
+**/*.log

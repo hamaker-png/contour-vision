@@ -1,0 +1,35 @@
+[
+  {
+    "id":"red-apple", "title":"Red apple · photo", "filename":"red-apple.jpg", "path":"/examples/red-apple.jpg",
+    "source":"https://commons.wikimedia.org/wiki/File:Red_Apple.jpg", "credit":"Abhijit Tembhekar · CC BY 2.0",
+    "description":"Detect the single red apple, including its yellow-red body. Ignore the cast shadow.",
+    "context":"Independent photograph. Specular highlights and yellow skin test incomplete color masks. Report visible dimensions in pixels; there is no physical calibration.",
+    "labeled":true,"boxes":[{"x":0.104,"y":0.107,"width":0.78,"height":0.832}],
+    "strategies":[
+      {"name":"Red apple hue","method":"hsv","hue_low":170,"hue_high":15,"saturation_low":55,"value_low":35,"min_area":0.05,"max_area":0.95,"morph":5,"rationale":"Red and orange skin should isolate much of the apple; inspect missing yellow regions and highlights."},
+      {"name":"Apple silhouette","method":"otsu","invert":true,"min_area":0.05,"max_area":0.95,"morph":3,"rationale":"Brightness may recover more of the body but could include its shadow."}
+    ]
+  },
+  {
+    "id":"tennis-ball", "title":"Tennis ball · photo", "filename":"tennis-ball.png", "path":"/examples/tennis-ball.png",
+    "source":"https://commons.wikimedia.org/wiki/File:Tennisball2.png", "credit":"KS / Christian VisualBeo Horvat · CC BY-SA 3.0",
+    "description":"Detect the large foreground yellow-green tennis ball. Ignore the partial distant ball at the upper left.",
+    "context":"A textured sphere with printed lettering, pale seams and edge artifacts. The main ball nearly fills the frame. Bounding-box matching alone does not validate accurate segmentation or physical size.",
+    "labeled":true,"boxes":[{"x":0.002,"y":0.002,"width":0.995,"height":0.995}],
+    "strategies":[
+      {"name":"Yellow-green ball mask","method":"hsv","hue_low":20,"hue_high":50,"saturation_low":65,"value_low":40,"min_area":0.15,"max_area":1,"reject_border":false,"morph":5,"rationale":"Color selects the ball surface. Large-area filtering may reject the partial background ball."},
+      {"name":"Ball brightness baseline","method":"otsu","min_area":0.15,"max_area":1,"reject_border":false,"rationale":"Brightness is a weak baseline because the background and ball overlap in intensity."}
+    ]
+  },
+  {
+    "id":"horse-silhouette", "title":"Horse silhouette · 2D", "filename":"horse.png", "path":"/examples/horse.png",
+    "source":"https://scikit-image.org/docs/stable/api/skimage.data.html#skimage.data.horse", "credit":"Andreas Preuss / scikit-image · CC0",
+    "description":"Detect the black horse silhouette as one object, retaining its narrow legs, ears and tail.",
+    "context":"Independent binary 2D silhouette. Extra blur or morphology can erase small parts. Length/width are visible rotated bounding rectangle extents, not anatomy measurements.",
+    "labeled":true,"boxes":[{"x":0.04,"y":0.024,"width":0.9375,"height":0.93}],
+    "strategies":[
+      {"name":"Direct silhouette","method":"otsu","invert":true,"blur":1,"morph":0,"min_area":0.02,"max_area":0.95,"rationale":"The clean binary input needs only brightness selection; avoid destroying thin features."},
+      {"name":"Smoothed silhouette","method":"otsu","invert":true,"blur":7,"morph":7,"min_area":0.02,"max_area":0.95,"rationale":"Compare a heavier cleanup and check whether legs and ears are lost."}
+    ]
+  }
+]

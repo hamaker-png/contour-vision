@@ -1,0 +1,73 @@
+struct Filter {double min_area,max_area,min_circularity,min_solidity,min_aspect,max_aspect;bool reject_border;};
+struct Detection {cv::Rect box;cv::RotatedRect rect;double area;cv::Scalar color;};
+struct Step {std::string id,kind;double ms;};
+static double elapsed(std::chrono::steady_clock::time_point start){return std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count();}
+
+static std::string measure(const cv::Mat& mask,const cv::Mat& source,cv::Mat& accepted,cv::Mat& preview,const Filter& f,const std::string& id){
+    using namespace config;
+    const double sx=double(source.cols)/mask.cols,sy=double(source.rows)/mask.rows;
+    cv::Mat reference;if(source.size()!=mask.size())cv::resize(source,reference,mask.size(),0,0,cv::INTER_AREA);else reference=source;
+    preview=reference.clone();accepted=cv::Mat::zeros(mask.size(),CV_8U);
+    std::vector<std::vector<cv::Point>> contours;cv::findContours(mask,contours,cv::RETR_EXTERNAL,cv::CHAIN_APPROX_SIMPLE);
+    std::vector<Detection> found;
+    for(const auto& contour:contours){
+        double area=cv::contourArea(contour),fraction=area/(double(mask.rows)*mask.cols);
+        if(fraction<f.min_area||fraction>f.max_area)continue;
+        auto box=cv::boundingRect(contour);
+        if(f.reject_border&&(box.x==0||box.y==0||box.x+box.width>=mask.cols||box.y+box.height>=mask.rows))continue;
+        const double perimeter=cv::arcLength(contour,true);std::vector<cv::Point> hull;cv::convexHull(contour,hull);
+        double solidity=area/std::max(cv::contourArea(hull),1e-9);auto rect=cv::minAreaRect(contour);
+        double aspect=std::max(rect.size.width,rect.size.height)/std::max(double(std::min(rect.size.width,rect.size.height)),1e-9);
+        if(4*CV_PI*area/std::max(perimeter*perimeter,1e-9)<f.min_circularity||solidity<f.min_solidity||aspect<f.min_aspect||aspect>f.max_aspect)continue;
+        std::vector<cv::Point2f> original;for(auto p:contour)original.emplace_back(float(p.x)*float(sx),float(p.y)*float(sy));
+        cv::Scalar color;
+        if(found.size()>=1000)throw std::runtime_error("More than 1,000 contours. Increase minimum area before measuring.");
+        if(measure_color){cv::Mat region=cv::Mat::zeros(box.size(),CV_8U);cv::drawContours(region,std::vector<std::vector<cv::Point>>{contour},-1,255,cv::FILLED,cv::LINE_8,cv::noArray(),INT_MAX,-box.tl());color=cv::mean(reference(box),region);}
+        found.push_back({box,cv::minAreaRect(original),cv::contourArea(original),color});
+        cv::drawContours(accepted,std::vector<std::vector<cv::Point>>{contour},-1,255,cv::FILLED);
+        cv::rectangle(preview,box.tl(),cv::Point(box.x+box.width,box.y+box.height),cv::Scalar(60,136,55),2);
+    }
+    std::sort(found.begin(),found.end(),[](const Detection&a,const Detection&b){return a.box.y!=b.box.y?a.box.y<b.box.y:a.box.x<b.box.x;});
+    double divisor=pixels_per_unit>0?pixels_per_unit:1;
+    std::ostringstream out;out<<std::fixed<<std::setprecision(3)<<"{\"id\":"<<quote(id)<<",\"count\":"<<found.size()<<",\"unit\":"<<quote(unit)<<",\"detections\":[";
+    for(size_t i=0;i<found.size();++i){
+        const auto&d=found[i];if(i)out<<',';
+        out<<"{\"box\":["<<d.box.x*sx<<','<<d.box.y*sy<<','<<d.box.width*sx<<','<<d.box.height*sy<<"],\"measurements\":{";
+        bool first=true;auto field=[&](const char* key){if(!first)out<<',';first=false;out<<quote(key)<<':';};
+        if(measure_length){field("length");out<<std::max(d.rect.size.width,d.rect.size.height)/divisor;}
+        if(measure_width){field("width");out<<std::min(d.rect.size.width,d.rect.size.height)/divisor;}
+        if(measure_area){field("area");out<<d.area/(divisor*divisor);}
+        if(measure_center){field("center_px");out<<'['<<d.rect.center.x<<','<<d.rect.center.y<<']';}
+        if(measure_color){field("mean_rgb");out<<'['<<int(d.color[2]+.5)<<','<<int(d.color[1]+.5)<<','<<int(d.color[0]+.5)<<']';}
+        if(measure_angle){field("angle_deg");if(std::max(d.rect.size.width,d.rect.size.height)/std::max(double(std::min(d.rect.size.width,d.rect.size.height)),1e-9)<=1.05)out<<"null";else out<<std::fmod(d.rect.angle+(d.rect.size.width<d.rect.size.height?90:0)+180,180);}
+        out<<"}}";
+    }
+    out<<"]}";return out.str();
+}
+
+static std::string run(const cv::Mat& source,const std::string& name,cv::Mat& frame,cv::Mat& preview){
+    if(source.total()>24000000)throw std::runtime_error("Input exceeds 24 megapixels");
+    auto start=std::chrono::steady_clock::now();frame=source.clone();
+    std::vector<Step> steps;std::vector<std::string> measurements;
+    // GENERATED_OPERATIONS
+    const double total=elapsed(start);
+    std::ostringstream out;out<<std::fixed<<std::setprecision(6);
+    out<<"{\"image\":"<<quote(name)<<",\"latency_ms\":"<<total<<",\"final\":{\"kind\":\"GENERATED_FINAL_KIND\",\"width\":"<<frame.cols<<",\"height\":"<<frame.rows<<"},\"operations\":[";
+    for(size_t i=0;i<steps.size();++i){if(i)out<<',';out<<"{\"id\":"<<quote(steps[i].id)<<",\"kind\":"<<quote(steps[i].kind)<<",\"latency_ms\":"<<steps[i].ms<<'}';}
+    out<<"],\"measurement_steps\":[";for(size_t i=0;i<measurements.size();++i){if(i)out<<',';out<<measurements[i];}out<<"]}";return out.str();
+}
+
+int main(int argc,char**argv){
+    cv::setNumThreads(1);cv::ocl::setUseOpenCL(false);std::vector<std::string> inputs;std::string output,preview_path;
+    for(int i=1;i<argc;++i){std::string arg=argv[i];
+        if((arg=="--output"||arg=="--preview")&&i+1<argc){if(arg=="--output")output=argv[++i];else preview_path=argv[++i];}
+        else if(arg=="--help"){std::cout<<"detector [--output final.png] [--preview overlay.png] image [image ...]\n";return 0;}
+        else if(arg.rfind("--",0)==0){std::cerr<<"Unknown or incomplete option\n";return 2;}else inputs.push_back(arg);
+    }
+    if(inputs.empty()||((!output.empty()||!preview_path.empty())&&inputs.size()!=1)){std::cerr<<"Provide images; output files require exactly one input\n";return 2;}
+    int status=0;for(const auto&path:inputs){try{cv::Mat final,preview;auto json=run(read_image(path),path,final,preview);
+        if(!output.empty()&&!cv::imwrite(output,final))throw std::runtime_error("Could not write final image");
+        if(!preview_path.empty()&&!cv::imwrite(preview_path,preview.empty()?final:preview))throw std::runtime_error("Could not write preview");
+        std::cout<<json<<'\n';
+    }catch(const std::exception&e){std::cerr<<path<<": "<<e.what()<<'\n';status=1;}}return status;
+}

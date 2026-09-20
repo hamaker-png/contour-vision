@@ -1,0 +1,283 @@
+#include <opencv2/core.hpp>
+#include <opencv2/core/ocl.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <algorithm>
+#include <chrono>
+#include <cmath>
+#include <cstdint>
+#include <cstring>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
+namespace config {
+// GENERATED_CONSTANTS
+}
+
+static std::string quote(const std::string& value) {
+    std::ostringstream out;
+    out << '"';
+    for (unsigned char c : value) {
+        if (c == '"' || c == '\\') out << '\\' << c;
+        else if (c < 32) out << "\\u" << std::hex << std::setw(4) << std::setfill('0') << int(c) << std::dec;
+        else out << c;
+    }
+    out << '"';
+    return out.str();
+}
+
+// Read only the bounded IFD0 orientation tag. OpenCV's automatic handling differs
+// across codecs and skips grayscale/alpha when IMREAD_UNCHANGED is used.
+static int tiff_orientation(const unsigned char* data,size_t size) {
+    if(size>=6&&std::memcmp(data,"Exif\0\0",6)==0){data+=6;size-=6;}
+    if(size<8)return 1;
+    const bool little=data[0]=='I'&&data[1]=='I';
+    if(!little&&!(data[0]=='M'&&data[1]=='M'))return 1;
+    auto u16=[&](size_t at)->uint32_t{if(at>size||size-at<2)return 0;return little?uint32_t(data[at])|(uint32_t(data[at+1])<<8):(uint32_t(data[at])<<8)|data[at+1];};
+    auto u32=[&](size_t at)->uint32_t{if(at>size||size-at<4)return 0;uint32_t v=0;for(int i=0;i<4;++i)v|=uint32_t(data[at+i])<<(8*(little?i:3-i));return v;};
+    if(u16(2)!=42)return 1;
+    const size_t offset=u32(4);if(offset<8||offset>size||size-offset<2)return 1;
+    const size_t count=u16(offset);if(count>(size-offset-2)/12)return 1;
+    for(size_t i=0;i<count;++i){size_t at=offset+2+i*12;if(u16(at)==0x112&&u16(at+2)==3&&u32(at+4)==1){int value=int(u16(at+8));return value>=1&&value<=8?value:1;}}
+    return 1;
+}
+
+static int image_orientation(const std::vector<unsigned char>& bytes) {
+    const size_t n=bytes.size();const auto* data=bytes.data();
+    auto be32=[&](size_t p){return (uint32_t(data[p])<<24)|(uint32_t(data[p+1])<<16)|(uint32_t(data[p+2])<<8)|data[p+3];};
+    auto le32=[&](size_t p){return uint32_t(data[p])|(uint32_t(data[p+1])<<8)|(uint32_t(data[p+2])<<16)|(uint32_t(data[p+3])<<24);};
+    if(n>=2&&data[0]==0xff&&data[1]==0xd8){
+        size_t p=2;
+        while(p<n){
+            if(data[p++]!=0xff)break;
+            while(p<n&&data[p]==0xff)++p;if(p>=n)break;
+            const int marker=data[p++];if(marker==0xda||marker==0xd9)break;
+            if(marker==1||(marker>=0xd0&&marker<=0xd8))continue;
+            if(n-p<2)break;const size_t length=(size_t(data[p])<<8)|data[p+1];
+            if(length<2||length>n-p)break;
+            if(marker==0xe1&&length>=8&&std::memcmp(data+p+2,"Exif\0\0",6)==0)return tiff_orientation(data+p+2,length-2);
+            p+=length;
+        }
+        return 1;
+    }
+    if(n>=8&&std::memcmp(data,"\x89PNG\r\n\x1a\n",8)==0){
+        for(size_t p=8;n-p>=12;){const size_t length=be32(p);if(length>n-p-12)break;
+            if(std::memcmp(data+p+4,"IEND",4)==0)break;
+            if(std::memcmp(data+p+4,"eXIf",4)==0)return tiff_orientation(data+p+8,length);
+            p+=length+12;
+        }
+        return 1;
+    }
+    if(n>=12&&std::memcmp(data,"RIFF",4)==0&&std::memcmp(data+8,"WEBP",4)==0){
+        const uint64_t declared=uint64_t(le32(4))+8;const size_t end=static_cast<size_t>(std::min<uint64_t>(n,declared));
+        if(end<12)return 1;
+        for(size_t p=12;end-p>=8;){const size_t length=le32(p+4);if(length>end-p-8)break;
+            if(std::memcmp(data+p,"EXIF",4)==0)return tiff_orientation(data+p+8,length);
+            const size_t next=8+length+(length&1);if(next>end-p)break;p+=next;
+        }
+        return 1;
+    }
+    throw std::runtime_error("Use a PNG, JPEG, or WebP image");
+}
+
+static void check_image_dimensions(const std::vector<unsigned char>& bytes) {
+    const auto* data=bytes.data();const size_t n=bytes.size();
+    auto check=[](uint32_t w,uint32_t h){if(!w||!h)throw std::runtime_error("Invalid input dimensions");if(uint64_t(w)*h>24000000)throw std::runtime_error("Input exceeds 24 megapixels");};
+    auto be32=[&](size_t p){return (uint32_t(data[p])<<24)|(uint32_t(data[p+1])<<16)|(uint32_t(data[p+2])<<8)|data[p+3];};
+    auto le32=[&](size_t p){return uint32_t(data[p])|(uint32_t(data[p+1])<<8)|(uint32_t(data[p+2])<<16)|(uint32_t(data[p+3])<<24);};
+    auto le24=[&](size_t p){return uint32_t(data[p])|(uint32_t(data[p+1])<<8)|(uint32_t(data[p+2])<<16);};
+    if(n>=24&&std::memcmp(data,"\x89PNG\r\n\x1a\n",8)==0&&std::memcmp(data+12,"IHDR",4)==0){check(be32(16),be32(20));return;}
+    if(n>=2&&data[0]==0xff&&data[1]==0xd8){
+        size_t p=2;
+        while(p<n){if(data[p++]!=0xff)break;while(p<n&&data[p]==0xff)++p;if(p>=n)break;
+            const int marker=data[p++];if(marker==0xda||marker==0xd9)break;
+            if(marker==1||(marker>=0xd0&&marker<=0xd8))continue;
+            if(n-p<2)break;const size_t length=(size_t(data[p])<<8)|data[p+1];if(length<2||length>n-p)break;
+            if(marker>=0xc0&&marker<=0xcf&&marker!=0xc4&&marker!=0xc8&&marker!=0xcc&&length>=8){
+                if(data[p+7]==4)throw std::runtime_error("Convert CMYK JPEG images to RGB before use; their color decoding differs across runtimes");
+                check((uint32_t(data[p+5])<<8)|data[p+6],(uint32_t(data[p+3])<<8)|data[p+4]);return;
+            }
+            p+=length;
+        }
+    }
+    if(n>=12&&std::memcmp(data,"RIFF",4)==0&&std::memcmp(data+8,"WEBP",4)==0){
+        const size_t end=static_cast<size_t>(std::min<uint64_t>(n,uint64_t(le32(4))+8));
+        if(end>=12)for(size_t p=12;end-p>=8;){
+            const size_t length=le32(p+4);if(length>end-p-8)break;const size_t d=p+8;
+            if(std::memcmp(data+p,"VP8X",4)==0&&length>=10){check(le24(d+4)+1,le24(d+7)+1);return;}
+            if(std::memcmp(data+p,"VP8L",4)==0&&length>=5&&data[d]==0x2f){check(1+uint32_t(data[d+1])+((uint32_t(data[d+2])&63)<<8),1+(uint32_t(data[d+2])>>6)+(uint32_t(data[d+3])<<2)+((uint32_t(data[d+4])&15)<<10));return;}
+            if(std::memcmp(data+p,"VP8 ",4)==0&&length>=10&&std::memcmp(data+d+3,"\x9d\x01\x2a",3)==0){check((uint32_t(data[d+6])|(uint32_t(data[d+7])<<8))&0x3fff,(uint32_t(data[d+8])|(uint32_t(data[d+9])<<8))&0x3fff);return;}
+            const size_t next=8+length+(length&1);if(next>end-p)break;p+=next;
+        }
+    }
+    throw std::runtime_error("Could not read PNG, JPEG, or WebP dimensions");
+}
+
+static cv::Mat read_image(const std::string& path) {
+    std::ifstream file(path,std::ios::binary|std::ios::ate);
+    if(!file)throw std::runtime_error("Could not read input image");
+    const auto length=file.tellg();if(length<=0||length>8000000)throw std::runtime_error("Images must be nonempty and under 8 MB");
+    std::vector<unsigned char> bytes(static_cast<size_t>(length));file.seekg(0);
+    if(!file.read(reinterpret_cast<char*>(bytes.data()),static_cast<std::streamsize>(bytes.size())))throw std::runtime_error("Could not read input image");
+    const int orientation=image_orientation(bytes);
+    check_image_dimensions(bytes);
+    cv::Mat raw = cv::imdecode(bytes, cv::IMREAD_UNCHANGED);
+    if (raw.empty()) throw std::runtime_error("Could not read input image");
+    if(raw.total()>24000000)throw std::runtime_error("Input exceeds 24 megapixels");
+    if (raw.depth() != CV_8U) throw std::runtime_error("Use an 8-bit PNG, JPEG, or WebP image");
+    cv::Mat result;
+    if (raw.channels() == 4) {
+        result.create(raw.size(), CV_8UC3);
+        for (int y = 0; y < raw.rows; ++y) for (int x = 0; x < raw.cols; ++x) {
+            auto p = raw.at<cv::Vec4b>(y, x);
+            auto& q = result.at<cv::Vec3b>(y, x);
+            for (int c = 0; c < 3; ++c) q[c] = static_cast<unsigned char>((p[c]*p[3] + 255*(255-p[3]) + 127)/255);
+        }
+    } else if (raw.channels() == 1) cv::cvtColor(raw, result, cv::COLOR_GRAY2BGR);
+    else if(raw.channels()==3)result=raw;
+    else throw std::runtime_error("Unsupported input channels");
+    if(orientation==2)cv::flip(result,result,1);
+    else if(orientation==3)cv::flip(result,result,-1);
+    else if(orientation==4)cv::flip(result,result,0);
+    else if(orientation==5)cv::transpose(result,result);
+    else if(orientation==6)cv::rotate(result,result,cv::ROTATE_90_CLOCKWISE);
+    else if(orientation==7){cv::transpose(result,result);cv::flip(result,result,-1);}
+    else if(orientation==8)cv::rotate(result,result,cv::ROTATE_90_COUNTERCLOCKWISE);
+    return result;
+}
+
+struct Detection {
+    cv::Rect box;
+    cv::RotatedRect rect;
+    double area;
+    cv::Scalar color;
+};
+
+static std::string run(const cv::Mat& image, const std::string& name, cv::Mat& overlay, bool annotate) {
+    using namespace config;
+    auto start = std::chrono::steady_clock::now();
+    const double scale = std::min(1.0, 1280.0/std::max(image.cols, image.rows));
+    cv::Size size(std::max(1, int(std::lround(image.cols*scale))), std::max(1, int(std::lround(image.rows*scale))));
+    cv::Mat small;
+    if (scale < 1) cv::resize(image, small, size, 0, 0, cv::INTER_AREA); else small = image;
+    const double sx = double(image.cols)/size.width, sy = double(image.rows)/size.height;
+    cv::Mat blurred, gray, mask;
+    if (blur > 1) cv::GaussianBlur(small, blurred, cv::Size(blur, blur), 0); else blurred = small;
+    cv::cvtColor(blurred, gray, cv::COLOR_BGR2GRAY);
+    std::string mode(method);
+    if (mode == "hsv") {
+        cv::Mat hsv;
+        cv::cvtColor(blurred, hsv, cv::COLOR_BGR2HSV);
+        auto band = [&](int lo, int hi) {
+            cv::Mat m;
+            cv::inRange(hsv, cv::Scalar(lo, saturation_low, value_low), cv::Scalar(hi, saturation_high, value_high), m);
+            return m;
+        };
+        if (hue_low <= hue_high) mask = band(hue_low, hue_high);
+        else cv::bitwise_or(band(hue_low, 179), band(0, hue_high), mask);
+    } else if (mode == "otsu") cv::threshold(gray, mask, 0, 255, cv::THRESH_BINARY | cv::THRESH_OTSU);
+    else if (mode == "adaptive") cv::adaptiveThreshold(gray, mask, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY, block_size, adaptive_c);
+    else cv::Canny(gray, mask, canny_low, canny_high);
+    if (invert) cv::bitwise_not(mask, mask);
+    if (morph > 0) {
+        cv::Mat kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(morph, morph));
+        if (mode != "canny") cv::morphologyEx(mask, mask, cv::MORPH_OPEN, kernel);
+        cv::morphologyEx(mask, mask, cv::MORPH_CLOSE, kernel);
+    }
+    std::vector<std::vector<cv::Point>> contours;
+    cv::findContours(mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+    std::vector<Detection> found;
+    if (annotate) overlay = image.clone();
+    for (const auto& contour : contours) {
+        double area = cv::contourArea(contour), fraction = area/(small.rows*double(small.cols));
+        if (fraction < min_area || fraction > max_area) continue;
+        cv::Rect box = cv::boundingRect(contour);
+        if (reject_border && (box.x == 0 || box.y == 0 || box.x+box.width >= small.cols || box.y+box.height >= small.rows)) continue;
+        double perimeter = cv::arcLength(contour, true);
+        double circularity = 4*CV_PI*area/std::max(perimeter*perimeter, 1e-9);
+        std::vector<cv::Point> hull;
+        cv::convexHull(contour, hull);
+        double solidity = area/std::max(cv::contourArea(hull), 1e-9);
+        auto r = cv::minAreaRect(contour);
+        double aspect = std::max(r.size.width, r.size.height)/std::max(double(std::min(r.size.width, r.size.height)), 1e-9);
+        if (circularity < min_circularity || solidity < min_solidity || aspect < min_aspect || aspect > max_aspect) continue;
+        std::vector<cv::Point2f> original;
+        for (const auto& p : contour) original.emplace_back(float(p.x*sx), float(p.y*sy));
+        cv::Scalar color;
+        if (measure_color) {
+            cv::Mat region = cv::Mat::zeros(mask.size(), CV_8U);
+            cv::drawContours(region, std::vector<std::vector<cv::Point>>{contour}, -1, 255, cv::FILLED);
+            color = cv::mean(small, region);
+        }
+        found.push_back({box, cv::minAreaRect(original), cv::contourArea(original), color});
+        if (annotate) cv::rectangle(overlay, cv::Point(int(box.x*sx), int(box.y*sy)), cv::Point(int((box.x+box.width)*sx), int((box.y+box.height)*sy)), cv::Scalar(65, 144, 50), 2);
+    }
+    std::sort(found.begin(), found.end(), [](const Detection& a, const Detection& b) {
+        return a.box.y != b.box.y ? a.box.y < b.box.y : a.box.x < b.box.x;
+    });
+    double elapsed = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now()-start).count();
+    double divisor = pixels_per_unit > 0 ? pixels_per_unit : 1.0;
+    std::ostringstream out;
+    out << std::fixed << std::setprecision(3);
+    out << "{\"image\":" << quote(name) << ",\"count\":" << found.size() << ",\"unit\":" << quote(unit)
+        << ",\"latency_ms\":" << elapsed << ",\"detections\":[";
+    for (size_t i = 0; i < found.size(); ++i) {
+        const auto& d = found[i];
+        if (i) out << ',';
+        out << "{\"box\":[" << d.box.x*sx << ',' << d.box.y*sy << ',' << d.box.width*sx << ',' << d.box.height*sy << "],\"measurements\":{";
+        bool first = true;
+        auto field = [&](const std::string& key) { if (!first) out << ','; first = false; out << quote(key) << ':'; };
+        if (measure_length) { field("length"); out << std::max(d.rect.size.width, d.rect.size.height)/divisor; }
+        if (measure_width) { field("width"); out << std::min(d.rect.size.width, d.rect.size.height)/divisor; }
+        if (measure_area) { field("area"); out << d.area/(divisor*divisor); }
+        if (measure_angle) {
+            field("angle_deg");
+            if (std::max(d.rect.size.width, d.rect.size.height)/std::max(double(std::min(d.rect.size.width, d.rect.size.height)), 1e-9) <= 1.05) out << "null";
+            else out << std::fmod(d.rect.angle + (d.rect.size.width < d.rect.size.height ? 90 : 0) + 180, 180);
+        }
+        if (measure_center) { field("center_px"); out << '[' << d.rect.center.x << ',' << d.rect.center.y << ']'; }
+        if (measure_color) {
+            int r = int(d.color[2]+0.5), g = int(d.color[1]+0.5), b = int(d.color[0]+0.5);
+            field("mean_rgb"); out << '[' << r << ',' << g << ',' << b << ']';
+            std::ostringstream hex;
+            hex << '#' << std::hex << std::setfill('0') << std::setw(2) << r << std::setw(2) << g << std::setw(2) << b;
+            field("color_hex"); out << quote(hex.str());
+        }
+        out << "}}";
+    }
+    out << "]}";
+    return out.str();
+}
+
+int main(int argc, char** argv) {
+    cv::setNumThreads(1);
+    cv::ocl::setUseOpenCL(false);
+    std::vector<std::string> inputs;
+    std::string output;
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg == "--output" && i+1 < argc) output = argv[++i];
+        else if (arg == "--help") { std::cout << "detector [--output annotated.png] image [image ...]\n"; return 0; }
+        else if (arg.rfind("--", 0) == 0) { std::cerr << "Unknown or incomplete option\n"; return 2; }
+        else inputs.push_back(arg);
+    }
+    if (inputs.empty() || (!output.empty() && inputs.size() != 1)) {
+        std::cerr << "Usage: detector [--output annotated.png] image [image ...]\n";
+        return 2;
+    }
+    int status = 0;
+    for (const auto& path : inputs) {
+        try {
+            cv::Mat overlay;
+            auto json = run(read_image(path), path, overlay, !output.empty());
+            if (!output.empty() && !cv::imwrite(output, overlay)) throw std::runtime_error("Could not write overlay");
+            std::cout << json << '\n';
+        } catch (const std::exception& error) { std::cerr << path << ": " << error.what() << '\n'; status = 1; }
+    }
+    return status;
+}

@@ -1,0 +1,115 @@
+#include <map>
+#include <set>
+#include <tuple>
+#include <limits>
+#ifdef CONTOUR_CIMG
+#include "vendor/cimg_ops.hpp"
+#endif
+#ifdef CONTOUR_ZXING
+#include "ReadBarcode.h"
+#include "ReaderOptions.h"
+#include "Barcode.h"
+#endif
+struct Step {std::string id,kind;double ms;};
+static double elapsed(std::chrono::steady_clock::time_point start){return std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count();}
+struct Region {int kind=0;std::vector<cv::Point> points;}; // polygon, pixels, circle, line
+struct Object {cv::Rect box;Region region;std::map<std::string,std::string> values;std::string text;};
+struct Batch {cv::Size size;std::vector<Object> objects;std::string basis;cv::Mat color_reference;};
+static std::string number(double value){if(!std::isfinite(value))return "null";std::ostringstream out;out<<std::fixed<<std::setprecision(3)<<value;return out.str();}
+static void paint(cv::Mat& mask,const Region& r,cv::Point offset={}){
+    auto points=r.points;for(auto& p:points)p-=offset;
+    if(r.kind==1){for(auto p:points)mask.at<unsigned char>(p)=255;}
+    else if(r.kind==2)cv::circle(mask,points[0],r.points[1].x,255,cv::FILLED);
+    else if(r.kind==3)cv::line(mask,points[0],points[1],255,1);
+    else cv::fillPoly(mask,std::vector<std::vector<cv::Point>>{points},255);
+}
+static cv::Mat reference(const cv::Mat& source,cv::Size size){cv::Mat result;if(source.size()!=size)cv::resize(source,result,size,0,0,cv::INTER_AREA);else result=source;return result;}
+static Object object(cv::Rect box,Region region,cv::Size size,const cv::Mat& ref,double length,double width,double area,cv::Point2d center,double angle){
+    using namespace config;Object d{box,std::move(region),{},""};double div=pixels_per_unit>0?pixels_per_unit:1;
+    if(measure_length)d.values["length"]=number(length/div);if(measure_width)d.values["width"]=number(width/div);if(measure_area)d.values["area"]=number(area/(div*div));
+    if(measure_center)d.values["center_px"]="["+number(center.x)+","+number(center.y)+"]";
+    if(measure_angle)d.values["angle_deg"]=number(angle);
+    if(measure_color){auto roi=box&cv::Rect({},size);cv::Mat mask=cv::Mat::zeros(roi.size(),CV_8U);paint(mask,d.region,roi.tl());auto color=cv::mean(ref(roi),mask);d.values["mean_rgb"]="["+std::to_string(int(color[2]+.5))+","+std::to_string(int(color[1]+.5))+","+std::to_string(int(color[0]+.5))+"]";}
+    return d;
+}
+static void render(Batch& batch,const cv::Mat& source,cv::Mat& mask,cv::Mat& preview){
+    std::stable_sort(batch.objects.begin(),batch.objects.end(),[](const Object&a,const Object&b){return a.box.y!=b.box.y?a.box.y<b.box.y:a.box.x<b.box.x;});
+    mask=cv::Mat::zeros(batch.size,CV_8U);preview=(batch.color_reference.empty()?reference(source,batch.size):batch.color_reference).clone();
+    for(const auto& d:batch.objects){paint(mask,d.region);cv::rectangle(preview,d.box.tl(),d.box.br(),cv::Scalar(60,136,55),2);}
+}
+static std::string batch_json(const Batch& batch,const cv::Mat& source,const std::string& id){
+    double sx=double(source.cols)/batch.size.width,sy=double(source.rows)/batch.size.height;std::ostringstream out;out<<std::fixed<<std::setprecision(3);
+    out<<"{\"id\":"<<quote(id)<<",\"count\":"<<batch.objects.size()<<",\"unit\":"<<quote(config::unit)<<",\"measurement_basis\":"<<quote(batch.basis)<<",\"detections\":[";
+    for(size_t i=0;i<batch.objects.size();++i){const auto& d=batch.objects[i];if(i)out<<',';out<<"{\"box\":["<<d.box.x*sx<<','<<d.box.y*sy<<','<<d.box.width*sx<<','<<d.box.height*sy<<"],\"measurements\":{";
+        bool first=true;for(const auto&[key,value]:d.values){if(!first)out<<',';first=false;out<<quote(key)<<':'<<value;}out<<"}}";}
+    out<<"]}";return out.str();
+}
+struct Filter {double min_area,max_area,min_circularity,min_solidity,min_aspect,max_aspect;bool reject_border;};
+static Batch contours(const cv::Mat& mask,const cv::Mat& source,const Filter& f){
+    Batch batch{mask.size(),{},"External contour; area includes holes"};batch.color_reference=reference(source,mask.size());const auto& ref=batch.color_reference;double sx=double(source.cols)/mask.cols,sy=double(source.rows)/mask.rows;
+    std::vector<std::vector<cv::Point>> all;cv::findContours(mask,all,cv::RETR_EXTERNAL,cv::CHAIN_APPROX_SIMPLE);
+    for(const auto& contour:all){double area=cv::contourArea(contour),fraction=area/mask.total();if(fraction<f.min_area||fraction>f.max_area)continue;auto box=cv::boundingRect(contour);
+        if(f.reject_border&&(box.x==0||box.y==0||box.br().x>=mask.cols||box.br().y>=mask.rows))continue;
+        auto r=cv::minAreaRect(contour);double aspect=std::max(r.size.width,r.size.height)/std::max(double(std::min(r.size.width,r.size.height)),1e-9);std::vector<cv::Point> hull;cv::convexHull(contour,hull);double perimeter=cv::arcLength(contour,true);
+        if(aspect<f.min_aspect||aspect>f.max_aspect||area/std::max(cv::contourArea(hull),1e-9)<f.min_solidity||4*CV_PI*area/std::max(perimeter*perimeter,1e-9)<f.min_circularity)continue;
+        if(batch.objects.size()>=1000)throw std::runtime_error("More than 1,000 contours. Increase minimum area before measuring.");
+        std::vector<cv::Point2f> scaled;for(auto p:contour)scaled.emplace_back(float(p.x)*float(sx),float(p.y)*float(sy));auto rect=cv::minAreaRect(scaled);double rw=rect.size.width,rh=rect.size.height;
+        batch.objects.push_back(object(box,{0,contour},mask.size(),ref,std::max(rw,rh),std::min(rw,rh),cv::contourArea(scaled),rect.center,std::max(rw,rh)/std::max(std::min(rw,rh),1e-9)<=1.05?NAN:std::fmod(rect.angle+(rw<rh?90:0)+180,180)));
+    }return batch;
+}
+#ifdef CONTOUR_CIMG
+static cv::Mat distance_map(const cv::Mat& mask,int metric,double level){
+    std::vector<float> distances(mask.total());vision_cimg::distance(mask.ptr(),mask.cols,mask.rows,mask.step,metric,distances.data());cv::Mat out(mask.size(),CV_8U);
+    for(size_t i=0;i<distances.size();++i)out.ptr()[i]=static_cast<unsigned char>(std::floor(std::clamp(double(distances[i])/level,0.,255.)+.5));return out;
+}
+static Batch components(const cv::Mat& mask,const cv::Mat& source,int connectivity,int min_pixels,int max_pixels,bool reject_border){
+    std::vector<int32_t> labels(mask.total());cv::Mat cleaned(mask.size(),CV_8U);int n=vision_cimg::components(mask.ptr(),mask.cols,mask.rows,mask.step,connectivity,min_pixels,max_pixels,reject_border,cleaned.ptr(),labels.data());
+    if(n>1000)throw std::runtime_error("More than 1,000 connected regions. Increase minimum pixel area.");std::vector<std::vector<cv::Point>> points(n);
+    for(int y=0;y<mask.rows;++y)for(int x=0;x<mask.cols;++x){auto id=labels[size_t(y)*mask.cols+x];if(id)points[id-1].emplace_back(x,y);}
+    Batch batch{mask.size(),{},"Connected foreground pixels; holes excluded; axis-aligned extents"};batch.color_reference=reference(source,mask.size());const auto& ref=batch.color_reference;double sx=double(source.cols)/mask.cols,sy=double(source.rows)/mask.rows;
+    for(auto& group:points){auto box=cv::boundingRect(group);double a=box.width*sx,b=box.height*sy;batch.objects.push_back(object(box,{1,group},mask.size(),ref,std::max(a,b),std::min(a,b),group.size()*sx*sy,{(box.x+box.width/2.)*sx,(box.y+box.height/2.)*sy},std::max(a,b)/std::min(a,b)<=1.05?NAN:(a>=b?0:90)));}return batch;
+}
+#endif
+static Batch circles(const cv::Mat& image,const cv::Mat& source,double spacing,double edge,double votes,int min_radius,int max_radius){
+    if(image.total()>262144)throw std::runtime_error("Circle detection supports at most 262,144 pixels. Add Resize with max side 512 before this step.");cv::Mat edges;cv::Canny(image,edges,edge/2,edge);auto edge_count=cv::countNonZero(edges);if(edge_count>25000||static_cast<int64_t>(edge_count)*max_radius>500000)throw std::runtime_error("Circle search is too broad for these edges. Reduce maximum radius, denoise, or resize first.");
+    std::vector<cv::Vec3f> found;cv::HoughCircles(image,found,cv::HOUGH_GRADIENT,1,spacing,edge,votes,min_radius,max_radius);if(found.size()>256)throw std::runtime_error("More than 256 circles. Increase votes or spacing.");
+    Batch batch{image.size(),{},"Fitted circles; dimensions describe the fitted disk, including any clipped extent"};batch.color_reference=reference(source,image.size());const auto& ref=batch.color_reference;double sx=double(source.cols)/image.cols,sy=double(source.rows)/image.rows;
+    for(auto c:found){double x=c[0],y=c[1],r=c[2];int left=std::max(0,int(std::floor(x-r))),top=std::max(0,int(std::floor(y-r))),right=std::min(image.cols,int(std::ceil(x+r))+1),bottom=std::min(image.rows,int(std::ceil(y+r))+1);
+        auto d=object({left,top,right-left,bottom-top},{2,{{int(x+.5),int(y+.5)},{int(r+.5),0}}},image.size(),ref,2*r*std::max(sx,sy),2*r*std::min(sx,sy),CV_PI*r*r*sx*sy,{x*sx,y*sy},NAN);d.values["radius_px"]=number(r*std::sqrt(sx*sy));batch.objects.push_back(std::move(d));}return batch;
+}
+static Batch segments(const cv::Mat& image,const cv::Mat& source,int votes,double min_length,double max_gap){
+    std::vector<cv::Vec4i> found;cv::HoughLinesP(image,found,1,CV_PI/180,votes,min_length,max_gap);if(found.size()>1000)throw std::runtime_error("More than 1,000 line segments. Increase votes or length.");
+    Batch batch{image.size(),{},"Line endpoint distance and orientation; width and area are undefined; color samples the 1-pixel segment"};batch.color_reference=reference(source,image.size());const auto& ref=batch.color_reference;double sx=double(source.cols)/image.cols,sy=double(source.rows)/image.rows;
+    for(auto l:found){double dx=(l[2]-l[0])*sx,dy=(l[3]-l[1])*sy;auto d=object({std::min(l[0],l[2]),std::min(l[1],l[3]),std::abs(l[2]-l[0])+1,std::abs(l[3]-l[1])+1},{3,{{l[0],l[1]},{l[2],l[3]}}},image.size(),ref,std::hypot(dx,dy),NAN,NAN,{(l[0]+l[2])*sx/2,(l[1]+l[3])*sy/2},std::fmod(std::atan2(dy,dx)*180/CV_PI+180,180));
+        d.values["endpoints_px"]="["+number(l[0]*sx)+","+number(l[1]*sy)+","+number(l[2]*sx)+","+number(l[3]*sy)+"]";batch.objects.push_back(std::move(d));}return batch;
+}
+#ifdef CONTOUR_ZXING
+static std::string format_name(ZXing::BarcodeFormat format){auto name=ZXing::ToString(format);name.erase(std::remove(name.begin(),name.end(),'-'),name.end());return format==ZXing::BarcodeFormat::RMQRCode?"RMQRCode":name;}
+static Batch barcodes(const cv::Mat& image,const cv::Mat& source,ZXing::BarcodeFormats formats,bool rotate,bool downscale,ZXing::Binarizer binarizer){
+    auto options=ZXing::ReaderOptions().setFormats(formats).setTryRotate(rotate).setTryDownscale(downscale).setTextMode(ZXing::TextMode::Plain).setBinarizer(binarizer).setIsPure(false).setMaxNumberOfSymbols(255).setEanAddOnSymbol(ZXing::EanAddOnSymbol::Ignore).setReturnErrors(false);
+    auto found=ZXing::ReadBarcodes({image.ptr(),image.cols,image.rows,image.channels()==3?ZXing::ImageFormat::BGR:ZXing::ImageFormat::Lum,int(image.step)},options);
+    Batch batch{image.size(),{},"Decoded code quadrilateral; dimensions describe the code, not its surrounding object"};batch.color_reference=reference(source,image.size());const auto& ref=batch.color_reference;double sx=double(source.cols)/image.cols,sy=double(source.rows)/image.rows;
+    for(const auto& b:found){std::vector<cv::Point> points;std::vector<cv::Point2f> scaled;for(const auto& p:b.position()){points.emplace_back(p.x,p.y);scaled.emplace_back(float(p.x)*float(sx),float(p.y)*float(sy));}auto box=cv::boundingRect(points);auto r=cv::minAreaRect(scaled);double rw=r.size.width,rh=r.size.height;
+        auto d=object(box,{0,points},image.size(),ref,std::max(rw,rh),std::min(rw,rh),cv::contourArea(scaled),r.center,std::max(rw,rh)/std::max(std::min(rw,rh),1e-9)<=1.05?NAN:std::fmod(r.angle+(rw<rh?90:0)+180,180));d.text=b.text();d.values["text"]=quote(d.text);d.values["format"]=quote(format_name(b.format()));batch.objects.push_back(std::move(d));}return batch;
+}
+#endif
+static double iou(const Object&a,cv::Size as,const Object&b,cv::Size bs){
+    cv::Rect2d aa(double(a.box.x)/as.width,double(a.box.y)/as.height,double(a.box.width)/as.width,double(a.box.height)/as.height),bb(double(b.box.x)/bs.width,double(b.box.y)/bs.height,double(b.box.width)/bs.width,double(b.box.height)/bs.height);double intersection=(aa&bb).area();return intersection/std::max(aa.area()+bb.area()-intersection,1e-12);
+}
+static Batch confirm(const Batch& primary,const std::vector<const Batch*>& supports,int required,double threshold,bool match_text){
+    size_t comparisons=0;for(const auto* support:supports)comparisons+=primary.objects.size()*support->objects.size();if(comparisons>250000)throw std::runtime_error("Confirmation needs fewer candidate objects. Tighten upstream detector filters (at most 250,000 pair comparisons).");
+    if(supports.empty()||required>int(supports.size()))throw std::runtime_error("Choose enough supporting detector pipelines");std::vector<int> votes(primary.objects.size(),0);
+    for(const auto* support_ptr:supports){const auto& support=*support_ptr;std::vector<std::tuple<double,size_t,size_t>> pairs;for(size_t i=0;i<primary.objects.size();++i)for(size_t j=0;j<support.objects.size();++j){auto&a=primary.objects[i];auto&b=support.objects[j];if(match_text&&(a.text.empty()||a.text!=b.text))continue;double score=iou(a,primary.size,b,support.size);if(score>=threshold)pairs.emplace_back(-score,i,j);}std::sort(pairs.begin(),pairs.end());std::set<size_t> used_p,used_s;
+        for(auto [score,i,j]:pairs)if(!used_p.count(i)&&!used_s.count(j)){++votes[i];used_p.insert(i);used_s.insert(j);}}
+    Batch result{primary.size,{},primary.basis,primary.color_reference};for(size_t i=0;i<votes.size();++i)if(votes[i]>=required){auto d=primary.objects[i];d.values["supporting_branches"]=std::to_string(votes[i]);result.objects.push_back(std::move(d));}return result;
+}
+static std::string run(const cv::Mat& source,const std::string& name,cv::Mat& frame,cv::Mat& preview){
+    if(source.total()>24000000)throw std::runtime_error("Input exceeds 24 megapixels");auto begin_all=std::chrono::steady_clock::now();
+    std::map<std::string,cv::Mat> frames{{"source",source}};cv::Mat final_preview;std::map<std::string,Batch> batches;std::vector<Step> steps;std::vector<std::string> measurements;
+    // GENERATED_OPERATIONS
+    frame=frames.at("GENERATED_FINAL_ID");preview=final_preview;
+    std::ostringstream out;out<<std::fixed<<std::setprecision(6)<<"{\"image\":"<<quote(name)<<",\"latency_ms\":"<<elapsed(begin_all)<<",\"final\":{\"kind\":\"GENERATED_FINAL_KIND\",\"width\":"<<frame.cols<<",\"height\":"<<frame.rows<<"},\"operations\":[";
+    for(size_t i=0;i<steps.size();++i){if(i)out<<',';out<<"{\"id\":"<<quote(steps[i].id)<<",\"kind\":"<<quote(steps[i].kind)<<",\"latency_ms\":"<<steps[i].ms<<'}';}out<<"],\"measurement_steps\":[";
+    for(size_t i=0;i<measurements.size();++i){if(i)out<<',';out<<measurements[i];}out<<"]}";return out.str();
+}
+// GENERATED_MAIN
